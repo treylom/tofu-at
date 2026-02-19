@@ -1,0 +1,16 @@
+{
+  "name": "teamify",
+  "metadata": {
+    "description": "Convert workflows into Agent Teams (Split Pane/Swarm)",
+    "version": "2.0.0"
+  },
+  "plugins": [
+    {
+      "name": "teamify",
+      "description": "Workflow to Agent Teams converter",
+      "source": "./",
+      "strict": false,
+      "skills": ["./skills"]
+    }
+  ]
+}

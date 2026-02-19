@@ -1,0 +1,90 @@
+version: 1
+
+defaults:
+  routing_policy:
+    opus:
+      use_for: ["architecture", "integration", "high-risk refactor", "consensus"]
+    sonnet:
+      use_for: ["implementation planning", "refactor steps", "tests", "scripts", "category coordination"]
+    haiku:
+      use_for: ["labeling", "classification", "triage", "small transforms"]
+
+  hooks:
+    teammate_idle: ".team-os/hooks/teammate-idle-gate.js"
+    task_completed: ".team-os/hooks/task-completed-gate.js"
+
+  artifacts_root: ".team-os/artifacts"
+  bulletin_file: ".team-os/artifacts/TEAM_BULLETIN.md"
+  memory_file: ".team-os/artifacts/MEMORY.md"
+  consensus_root: ".team-os/consensus"
+
+  shared_memory:
+    layers:
+      - "markdown"
+    markdown_files:
+      - "TEAM_PLAN.md"
+      - "TEAM_BULLETIN.md"
+      - "TEAM_FINDINGS.md"
+      - "TEAM_PROGRESS.md"
+      - "MEMORY.md"
+    sqlite_path: ".team-os/artifacts/memory.db"
+    mcp_memory_server: ""
+
+  ralph_loop:
+    enabled: false
+    max_iterations: 5
+    review_criteria:
+      - "completeness"
+      - "accuracy"
+      - "format_compliance"
+    exit_conditions:
+      - "SHIP"
+      - "max_iterations"
+      - "all_tasks_done"
+
+  agent_memory_protocol:
+    on_start:
+      - "Read TEAM_PLAN.md -> confirm assignment"
+      - "Read TEAM_BULLETIN.md -> check recent findings"
+    on_progress:
+      - "Append to TEAM_BULLETIN.md (append-only)"
+      - "Update own row in TEAM_PROGRESS.md"
+    on_complete:
+      - "Write results to TEAM_FINDINGS.md or SendMessage to lead"
+      - "SendMessage with summary + evidence + next_actions"
+
+complexity_mapping:
+  simple:
+    agent_count: 0
+    description: "Main solo sequential processing"
+  standard:
+    agent_count: 2
+    roles: ["graph-navigator", "retrieval-specialist"]
+  complex:
+    agent_count: 3
+    roles: ["graph-navigator", "retrieval-specialist", "deep-reader"]
+
+categories:
+  - id: foundation
+    lead_teammate: lead_foundation
+    lead_model: sonnet
+  - id: ingest
+    lead_teammate: lead_ingest
+    lead_model: sonnet
+  - id: analyze
+    lead_teammate: lead_pkm
+    lead_model: sonnet
+  - id: graph
+    lead_teammate: lead_graph
+    lead_model: sonnet
+  - id: storage
+    lead_teammate: lead_storage
+    lead_model: sonnet
+  - id: ops
+    lead_teammate: lead_ops
+    lead_model: sonnet
+  - id: qa
+    lead_teammate: lead_qa
+    lead_model: sonnet
+
+teams: []

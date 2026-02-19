@@ -1,0 +1,22 @@
+# Artifacts (runtime generated)
+.team-os/artifacts/*.db
+.team-os/artifacts/.idle-tracker.json
+.team-os/reports/
+.team-os/graphrag/
+.team-os/dashboard/
+.team-os/spawn-prompts/
+.team-os/consensus/
+
+# Build outputs
+*.skill
+
+# Node
+node_modules/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.vscode/
+.idea/
