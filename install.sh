@@ -33,10 +33,12 @@ echo "  [OK] .claude/skills/teamify-*.md (3 files)"
 # .team-os infrastructure
 if [ ! -d ".team-os" ]; then
   cp -r "$SRC/.team-os" .
+  chmod +x .team-os/hooks/*.js 2>/dev/null || true
   echo "  [OK] .team-os/ (registry, hooks, artifacts)"
 else
   # Preserve existing registry, update hooks and artifacts
   cp "$SRC/.team-os/hooks/"*.js .team-os/hooks/ 2>/dev/null || true
+  chmod +x .team-os/hooks/*.js 2>/dev/null || true
   for f in TEAM_PLAN.md TEAM_BULLETIN.md TEAM_FINDINGS.md TEAM_PROGRESS.md MEMORY.md; do
     if [ ! -f ".team-os/artifacts/$f" ]; then
       cp "$SRC/.team-os/artifacts/$f" .team-os/artifacts/

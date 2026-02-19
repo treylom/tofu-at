@@ -25,8 +25,8 @@ defaults:
       use_for: ["labeling", "classification", "triage", "small transforms"]
 
   hooks:
-    teammate_idle: ".team-os/hooks/teammate_idle_gate.sh"
-    task_completed: ".team-os/hooks/task_completed_gate.sh"
+    teammate_idle: ".team-os/hooks/teammate-idle-gate.js"
+    task_completed: ".team-os/hooks/task-completed-gate.js"
 
   artifacts_root: ".team-os/artifacts"
   bulletin_file: ".team-os/artifacts/TEAM_BULLETIN.md"
