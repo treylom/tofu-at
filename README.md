@@ -609,6 +609,60 @@ your-project/
         └── MEMORY.md
 ```
 
+## tofu-at-codex (Hybrid Mode)
+
+> **Branch: `feature/codex`**
+
+Run Agent Teams with **Opus as Leader** and **GPT-5.3-Codex as Teammates** via [CLIProxyAPI](https://github.com/router-for-me/CLIProxyAPI).
+
+### How It Works
+
+```
+Leader (Opus 4.6)  ──── Anthropic Direct API
+                         |
+Teammates (Codex)  ──── CLIProxyAPI (localhost:8317)
+                         └── claude-sonnet-4-6 → gpt-5.3-codex (alias mapping)
+```
+
+tmux session-level environment variables route new panes through CLIProxyAPI, while the Leader process stays on Anthropic Direct.
+
+### Install (Codex addon)
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/treylom/tofu-at/feature/codex/install-codex.sh | bash
+```
+
+Or manually:
+
+```bash
+git clone -b feature/codex https://github.com/treylom/tofu-at.git /tmp/tofu-at
+cd /tmp/tofu-at && bash install-codex.sh
+```
+
+### Additional Requirements
+
+| Dependency | Install |
+|-----------|---------|
+| Codex CLI | `npm install -g @openai/codex && codex --login` |
+| CLIProxyAPI | `git clone https://github.com/router-for-me/CLIProxyAPI.git ~/CLIProxyAPI` |
+| OAuth Token | `cd ~/CLIProxyAPI && ./cli-proxy-api` (TUI auth) |
+
+### Dependency Check
+
+```bash
+bash .claude/scripts/setup-tofu-at-codex.sh           # check all
+AUTO_INSTALL=1 bash .claude/scripts/setup-tofu-at-codex.sh  # auto-install missing
+RUN_PROXY_TEST=1 bash .claude/scripts/setup-tofu-at-codex.sh  # test proxy routing
+```
+
+### Usage
+
+```
+/tofu-at-codex
+```
+
+Same workflow as `/tofu-at`, but teammates run on Codex instead of Claude.
+
 ## Troubleshooting
 
 ### "Agent Teams not available"
