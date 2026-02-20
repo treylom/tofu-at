@@ -4,11 +4,9 @@
 
 워크플로우를 Claude Code의 Agent Teams (Split Pane / Swarm)로 자동 변환하는 오케스트레이션 프레임워크.
 
-**설치 문서:** https://teamify-docs-jviqkn6x.manus.space/
-
-> 💡 위 URL을 Claude Code에게 전달하면 설치를 더 쉽게 도와줍니다:
+> 💡 Claude Code에 아래 메시지를 그대로 전달하면 가장 정확하게 설치됩니다:
 > ```
-> teamify 설치해줘: https://teamify-docs-jviqkn6x.manus.space/
+> https://github.com/treylom/teamify 설치해줘. https://teamify-docs-jviqkn6x.manus.space/ 를 참고하면 더 도움이 될거야.
 > ```
 
 ---
@@ -39,15 +37,13 @@
 
 #### 방법 1: Claude Code에게 요청 (권장)
 
-```
-teamify 설치해줘: https://github.com/treylom/teamify
-```
-
-또는 설치 문서를 직접 제공 (더 상세한 안내):
+아래 메시지를 Claude Code에 그대로 붙여넣으세요:
 
 ```
-teamify 설치해줘: https://teamify-docs-jviqkn6x.manus.space/
+https://github.com/treylom/teamify 설치해줘. https://teamify-docs-jviqkn6x.manus.space/ 를 참고하면 더 도움이 될거야.
 ```
+
+> GitHub URL과 설치 가이드 URL을 함께 제공하는 것이 가장 정확한 설치 방법입니다.
 
 #### 방법 2: install.sh 스크립트
 
@@ -103,11 +99,9 @@ cd /tmp/teamify && bash install.sh
 
 Convert workflows into Agent Teams (Split Pane / Swarm) for Claude Code.
 
-**Install docs:** https://teamify-docs-jviqkn6x.manus.space/
-
-> 💡 Share the URL above with Claude Code for guided installation:
+> 💡 Paste this into Claude Code for the most accurate installation:
 > ```
-> Install teamify: https://teamify-docs-jviqkn6x.manus.space/
+> Install https://github.com/treylom/teamify. https://teamify-docs-jviqkn6x.manus.space/ will help as a reference.
 > ```
 
 **teamify** analyzes your existing skills, agents, and commands, then generates optimized Agent Teams configurations with spawn prompts, quality gates, and shared memory.
@@ -134,15 +128,13 @@ Convert workflows into Agent Teams (Split Pane / Swarm) for Claude Code.
 
 ### Method 1: Ask Claude Code (Recommended)
 
-```
-Install teamify: https://github.com/treylom/teamify
-```
-
-Or share the installation docs for step-by-step guidance:
+Paste this message directly into Claude Code:
 
 ```
-Install teamify: https://teamify-docs-jviqkn6x.manus.space/
+Install https://github.com/treylom/teamify. https://teamify-docs-jviqkn6x.manus.space/ will help as a reference.
 ```
+
+> Providing both the GitHub URL and the install guide URL together gives Claude Code the most accurate context for installation.
 
 ### Method 2: install.sh
 
