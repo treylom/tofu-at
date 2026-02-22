@@ -1,4 +1,99 @@
-# tofu-at
+# Tofu-AT (Tofu Agent Teams)
+
+> 🇰🇷 한국어 설명입니다. [English guide is below ↓](#tofu-at-english)
+
+워크플로우를 Claude Code의 Agent Teams (Split Pane / Swarm)로 자동 변환하는 오케스트레이션 프레임워크.
+
+> 💡 Claude Code에 아래 메시지를 그대로 전달하면 가장 정확하게 설치됩니다:
+> ```
+> https://github.com/treylom/tofu-at 설치해줘.
+> ```
+
+---
+
+**Tofu-AT**는 기존 스킬, 에이전트, 커맨드를 분석하여 병렬화된 Agent Teams 구성을 자동 생성합니다. 스폰 프롬프트·품질 게이트·공유 메모리를 포함한 최적 팀 구성안을 즉시 실행할 수 있습니다.
+
+### 주요 기능
+
+- **동적 리소스 스캔** - 스킬, 에이전트, MCP 서버, CLI 도구 자동 발견
+- **워크플로우 분석** - 병렬화 가능한 에이전트 단위로 자동 분해
+- **전문가 도메인 프라이밍** - 27개 도메인, 137명의 전문가 페르소나
+- **Ralph Loop** - 반복적 리뷰-피드백-재작업 품질 보장 사이클
+- **Devil's Advocate** - 팀 전체 일관성을 위한 교차 리뷰
+- **3계층 공유 메모리** - Markdown + SQLite WAL + MCP Memory
+- **Agent Office 대시보드** - 실시간 진행 상황 추적 (선택)
+- **원클릭 재실행** - 자동 슬래시 커맨드 생성으로 팀 즉시 재실행
+
+### 필수 요구사항
+
+| 항목 | 요구사항 | 설치 방법 |
+|------|---------|----------|
+| Claude Code | v2.1.45+ | [공식 문서](https://docs.anthropic.com/ko/docs/claude-code) |
+| tmux | Split Pane 필수 | `sudo apt install tmux` (Linux/WSL) / `brew install tmux` (macOS) |
+| Agent Teams | 실험적 기능 활성화 | 아래 설정 참조 |
+| Node.js | v18+ (선택) | https://nodejs.org |
+
+### 설치
+
+#### 방법 1: Claude Code에게 요청 (권장)
+
+아래 메시지를 Claude Code에 그대로 붙여넣으세요:
+
+```
+https://github.com/treylom/tofu-at 설치해줘.
+```
+
+#### 방법 2: install.sh 스크립트
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/treylom/tofu-at/main/install.sh | bash
+```
+
+또는 클론 후 실행:
+
+```bash
+git clone https://github.com/treylom/tofu-at.git /tmp/tofu-at
+cd /tmp/tofu-at && bash install.sh
+```
+
+#### 방법 3: .skill ZIP (Claude.ai)
+
+[Releases](https://github.com/treylom/tofu-at/releases)에서 `tofu-at.skill` 다운로드 후 Claude.ai에 업로드.
+
+### Agent Teams 활성화
+
+`.claude/settings.local.json`에 추가:
+
+```json
+{
+  "env": {
+    "CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS": "1"
+  },
+  "teammateMode": "tmux"
+}
+```
+
+또는 자동 설정:
+
+```
+/tofu-at setup
+```
+
+### 사용 명령어
+
+| 명령어 | 설명 |
+|--------|------|
+| `/tofu-at` | 인터랙티브 메뉴 |
+| `/tofu-at scan <경로>` | 워크플로우 분석 → 팀 구성안 생성 |
+| `/tofu-at inventory` | 사용 가능한 리소스 전체 조회 |
+| `/tofu-at spawn <team_id>` | 등록된 팀 즉시 실행 |
+| `/tofu-at setup` | 환경 검증 + 필수 설정 자동 구성 |
+| `/tofu-at catalog <team_id>` | 팀 템플릿 저장/갱신 |
+| `/tofu-at-codex` | GPT-Codex 하이브리드 팀 (Opus + Codex) |
+
+---
+
+# tofu-at (English) {#tofu-at-english}
 
 Convert workflows into Agent Teams (Split Pane / Swarm) for Claude Code.
 
