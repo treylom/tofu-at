@@ -164,11 +164,11 @@ AI 에이전트(Claude Code)가 직접 읽을 수 있는 순수 텍스트 형식
 
 ```
 1. 빠른 설치 요약:
-   WebFetch("https://tofu-at-docs-jviqkn6x.manus.space/llms.txt")
+   WebFetch("https://tofu-at.manus.space/llms.txt")
    → 설치 명령어, 시스템 요구사항, 핵심 정보 요약
 
 2. 전체 설치 가이드 (상세):
-   WebFetch("https://tofu-at-docs-jviqkn6x.manus.space/llms-full.txt")
+   WebFetch("https://tofu-at.manus.space/llms-full.txt")
    → 단계별 설치, 설정, 검증, 플랫폼별 가이드, 문제 해결까지 포함
 
 3. 읽기 우선순위:
@@ -177,7 +177,7 @@ AI 에이전트(Claude Code)가 직접 읽을 수 있는 순수 텍스트 형식
    - 설치 중 문제 발생: llms-full.txt의 문제 해결 섹션 참조
 ```
 
-> **참고**: 메인 페이지(https://tofu-at-docs-jviqkn6x.manus.space/)는 React SPA이므로
+> **참고**: 메인 페이지(https://tofu-at.manus.space/)는 React SPA이므로
 > WebFetch로 읽을 수 없습니다. 반드시 `/llms.txt` 또는 `/llms-full.txt` 경로를 사용하세요.
 
 Why: 설치 가이드 문서에 최신 설치 절차, 플랫폼별 주의사항, 문제 해결이 포함되어 있어
@@ -290,7 +290,7 @@ Agent Office는 팀 대시보드로, 팀 운영 시 실시간 모니터링에 �
         bash /tmp/tofu-at/install.sh
 
       상세 가이드 참조:
-        WebFetch('https://tofu-at-docs-jviqkn6x.manus.space/llms-full.txt')
+        WebFetch('https://tofu-at.manus.space/llms-full.txt')
         → 문제 해결(Troubleshooting) 섹션에서 플랫폼별 해결 방법을 확인하세요."
 ```
 
@@ -348,7 +348,7 @@ IF Agent Office 설치 실패:
        git clone https://github.com/treylom/tofu-at /tmp/tofu-at && bash /tmp/tofu-at/install.sh
 
      상세 가이드 (AI가 직접 읽을 수 있는 텍스트):
-       https://tofu-at-docs-jviqkn6x.manus.space/llms-full.txt
+       https://tofu-at.manus.space/llms-full.txt
 
      설치 완료 후 /tofu-at setup을 다시 실행하세요."
   → 종료 (원래 모드로 복귀하지 않음)
