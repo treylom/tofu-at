@@ -4,10 +4,15 @@
 
 워크플로우를 Claude Code의 Agent Teams (Split Pane / Swarm)로 자동 변환하는 오케스트레이션 프레임워크.
 
-> 💡 Claude Code에 아래 메시지를 그대로 전달하면 가장 정확하게 설치됩니다:
+---
+
+> ## 💡 Claude Code에 아래 메시지를 그대로 전달하면 가장 정확하게 설치됩니다
+>
 > ```
 > https://github.com/treylom/tofu-at 설치해줘. https://tofu-at.manus.space 를 참고하면 더 도움이 될거야.
 > ```
+
+---
 
 **Tofu-AT**는 기존 스킬, 에이전트, 커맨드를 분석하여 병렬화된 Agent Teams 구성을 자동 생성합니다. 스폰 프롬프트·품질 게이트·공유 메모리를 포함한 최적 팀 구성안을 즉시 실행할 수 있습니다.
 
