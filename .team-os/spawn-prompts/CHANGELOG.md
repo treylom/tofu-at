@@ -33,6 +33,6 @@
 ### 영향 범위
 - 영향받는 기능: /knowledge-manager-at 실행 시 Agent Office 실시간 진행률
 - 기존 기능: 스폰 프롬프트의 `<task>`, `<output_format>`, `<constraints>` 변경 없음
-- teamify2: 자체 progress_update_rule 보유, 영향 없음
+- tofu-at2: 자체 progress_update_rule 보유, 영향 없음
 
 ---

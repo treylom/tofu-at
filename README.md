@@ -1,33 +1,33 @@
-# teamify
+# tofu-at
 
 Convert workflows into Agent Teams (Split Pane / Swarm) for Claude Code.
 
-**teamify** analyzes your existing skills, agents, and commands, then generates optimized Agent Teams configurations with spawn prompts, quality gates, and shared memory.
+**tofu-at** analyzes your existing skills, agents, and commands, then generates optimized Agent Teams configurations with spawn prompts, quality gates, and shared memory.
 
 ## Quick Start
 
 ```bash
 # 1. Clone
-git clone https://github.com/treylom/teamify.git /tmp/teamify
+git clone https://github.com/treylom/tofu-at.git /tmp/tofu-at
 
 # 2. Go to your project
 cd ~/my-project
 
 # 3. Install
-bash /tmp/teamify/install.sh
+bash /tmp/tofu-at/install.sh
 
 # 4. Launch Claude Code
 claude --model=opus[1m]
 
-# 5. Run teamify
-# Type: /teamify
+# 5. Run tofu-at
+# Type: /tofu-at
 ```
 
 ## One-Liner Install
 
 ```bash
 cd ~/my-project
-curl -fsSL https://raw.githubusercontent.com/treylom/teamify/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/treylom/tofu-at/main/install.sh | bash
 ```
 
 The installer handles everything: prerequisite checks, file copying, `settings.local.json` configuration, and hooks setup.
@@ -79,7 +79,7 @@ If you prefer manual setup:
 ```bash
 # 1. Copy command
 mkdir -p .claude/commands
-cp commands/teamify.md .claude/commands/
+cp commands/tofu-at.md .claude/commands/
 
 # 2. Copy skills
 mkdir -p .claude/skills
@@ -102,7 +102,7 @@ cp -r .team-os .
 
 ### Claude.ai (.skill ZIP)
 
-Download `teamify.skill` from [Releases](https://github.com/treylom/teamify/releases) and upload to Claude.ai. Skills only; `.team-os` infra is auto-created on first run.
+Download `tofu-at.skill` from [Releases](https://github.com/treylom/tofu-at/releases) and upload to Claude.ai. Skills only; `.team-os` infra is auto-created on first run.
 
 ## OS-Specific Notes
 
@@ -163,7 +163,7 @@ bash setup-bashrc.sh ~/my-project --shell=zsh        # for zsh users
 ### Interactive Mode
 
 ```
-/teamify
+/tofu-at
 ```
 
 Presents an action menu: Scan, Inventory, Spawn, Catalog.
@@ -171,7 +171,7 @@ Presents an action menu: Scan, Inventory, Spawn, Catalog.
 ### Scan a Workflow
 
 ```
-/teamify scan .claude/skills/my-workflow.md
+/tofu-at scan .claude/skills/my-workflow.md
 ```
 
 Analyzes the workflow, proposes a team composition, and optionally spawns the team.
@@ -179,7 +179,7 @@ Analyzes the workflow, proposes a team composition, and optionally spawns the te
 ### View Resources
 
 ```
-/teamify inventory
+/tofu-at inventory
 ```
 
 Lists all available skills, agents, MCP servers, and CLI tools.
@@ -187,7 +187,7 @@ Lists all available skills, agents, MCP servers, and CLI tools.
 ### Spawn a Registered Team
 
 ```
-/teamify spawn km.ingest.web.standard --url https://example.com
+/tofu-at spawn km.ingest.web.standard --url https://example.com
 ```
 
 Instantly creates and runs a pre-registered team from `registry.yaml`.
@@ -195,7 +195,7 @@ Instantly creates and runs a pre-registered team from `registry.yaml`.
 ### Register a Team Template
 
 ```
-/teamify catalog my-team-id
+/tofu-at catalog my-team-id
 ```
 
 Saves/updates a team configuration in `.team-os/registry.yaml`.
@@ -203,20 +203,20 @@ Saves/updates a team configuration in `.team-os/registry.yaml`.
 ## Architecture
 
 ```
-/teamify command (entry point)
+/tofu-at command (entry point)
     |
-    +-- teamify-workflow.md      (analysis engine)
+    +-- tofu-at-workflow.md      (analysis engine)
     |     - Resource scanning (MCP, CLI, Skills)
     |     - Workflow decomposition
     |     - Agent unit identification
     |     - Shared memory design
     |
-    +-- teamify-registry-schema.md  (YAML schema)
+    +-- tofu-at-registry-schema.md  (YAML schema)
     |     - Team template structure
     |     - Validation rules
     |     - 30+ team_id catalog
     |
-    +-- teamify-spawn-templates.md  (spawn prompts)
+    +-- tofu-at-spawn-templates.md  (spawn prompts)
           - Lead / Category Lead / Worker templates
           - Expert Domain Priming (137 experts)
           - /prompt pipeline integration
@@ -251,11 +251,11 @@ Saves/updates a team configuration in `.team-os/registry.yaml`.
 your-project/
 ├── .claude/
 │   ├── commands/
-│   │   └── teamify.md          # /teamify command
+│   │   └── tofu-at.md          # /tofu-at command
 │   ├── skills/
-│   │   ├── teamify-workflow.md
-│   │   ├── teamify-registry-schema.md
-│   │   └── teamify-spawn-templates.md
+│   │   ├── tofu-at-workflow.md
+│   │   ├── tofu-at-registry-schema.md
+│   │   └── tofu-at-spawn-templates.md
 │   └── settings.local.json     # auto-configured
 └── .team-os/
     ├── registry.yaml

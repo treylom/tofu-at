@@ -1,7 +1,7 @@
-# teamify 설치 가이드 (초보자용)
+# tofu-at 설치 가이드 (초보자용)
 
 > 이 가이드는 **AI를 처음 접하는 분**도 따라할 수 있도록 모든 단계를 설명합니다.
-> Windows(WSL) 설치부터 teamify 실행까지 전 과정을 다룹니다.
+> Windows(WSL) 설치부터 tofu-at 실행까지 전 과정을 다룹니다.
 
 ---
 
@@ -16,7 +16,7 @@
 
 ### 이 가이드에서 할 일
 1. 필수 소프트웨어 설치 (Node.js, tmux, Claude Code)
-2. teamify 설치 (`install.sh` 한 줄 실행)
+2. tofu-at 설치 (`install.sh` 한 줄 실행)
 3. 첫 실행 및 확인
 
 ### 내 환경은?
@@ -24,9 +24,9 @@
 | 환경 | 시작 섹션 |
 |------|----------|
 | **Windows** (WSL 미설치) | → [Part 0: WSL 설치](#part-0-wsl-설치-windows-사용자만) |
-| **Windows** (WSL 설치됨) | → [Part 1: teamify 설치](#part-1-teamify-설치) |
-| **macOS** | → [Part 1: teamify 설치](#part-1-teamify-설치) |
-| **Linux** | → [Part 1: teamify 설치](#part-1-teamify-설치) |
+| **Windows** (WSL 설치됨) | → [Part 1: tofu-at 설치](#part-1-tofu-at-설치) |
+| **macOS** | → [Part 1: tofu-at 설치](#part-1-tofu-at-설치) |
+| **Linux** | → [Part 1: tofu-at 설치](#part-1-tofu-at-설치) |
 
 ---
 
@@ -122,7 +122,7 @@ claude --version
 
 ---
 
-## Part 1: teamify 설치
+## Part 1: tofu-at 설치
 
 ### 1.1 사전 준비 확인
 
@@ -144,7 +144,7 @@ git --version      # git
 
 > 하나라도 없으면? [Part 0](#part-0-wsl-설치-windows-사용자만) 또는 OS별 설치 가이드 참고
 
-### 1.2 teamify 다운로드
+### 1.2 tofu-at 다운로드
 
 #### 방법 A: 원라인 설치 (가장 간단)
 
@@ -152,20 +152,20 @@ git --version      # git
 
 ```bash
 cd ~/my-project
-curl -fsSL https://raw.githubusercontent.com/treylom/teamify/main/install.sh | bash
+curl -fsSL https://raw.githubusercontent.com/treylom/tofu-at/main/install.sh | bash
 ```
 
 #### 방법 B: Git Clone 후 설치
 
 ```bash
-# 1. teamify 다운로드
-git clone https://github.com/treylom/teamify.git /tmp/teamify
+# 1. tofu-at 다운로드
+git clone https://github.com/treylom/tofu-at.git /tmp/tofu-at
 
 # 2. 프로젝트 폴더로 이동
 cd ~/my-project
 
 # 3. 설치 실행
-bash /tmp/teamify/install.sh
+bash /tmp/tofu-at/install.sh
 ```
 
 ### 1.3 설치 실행
@@ -174,7 +174,7 @@ bash /tmp/teamify/install.sh
 
 ```
 ╔══════════════════════════════════════════╗
-║        teamify installer v2.1.0         ║
+║        tofu-at installer v2.1.0         ║
 ╚══════════════════════════════════════════╝
 
 [1/7] Checking prerequisites... / 사전요구사항 확인 중...
@@ -188,9 +188,9 @@ bash /tmp/teamify/install.sh
   [OK] OS: WSL (Windows Subsystem for Linux)
   [OK] Package manager: apt
 
-[3/7] Installing teamify files... / teamify 파일 설치 중...
-  [OK] .claude/commands/teamify.md
-  [OK] .claude/skills/teamify-*.md (3 files)
+[3/7] Installing tofu-at files... / tofu-at 파일 설치 중...
+  [OK] .claude/commands/tofu-at.md
+  [OK] .claude/skills/tofu-at-*.md (3 files)
 
 [4/7] Setting up .team-os infrastructure... / .team-os 인프라 설정 중...
   [OK] .team-os/ (registry, hooks, artifacts) — fresh install
@@ -199,8 +199,8 @@ bash /tmp/teamify/install.sh
   [OK] settings.local.json configured (via Python3)
 
 [6/7] Verifying installation... / 설치 검증 중...
-  [OK] .claude/commands/teamify.md exists
-  [OK] .claude/skills/teamify-*.md (3 files)
+  [OK] .claude/commands/tofu-at.md exists
+  [OK] .claude/skills/tofu-at-*.md (3 files)
   [OK] .team-os/ directory structure
   [OK] settings.local.json is valid JSON
   [OK] All checks passed / 모든 검증 통과
@@ -208,17 +208,17 @@ bash /tmp/teamify/install.sh
 [7/7] Done! / 완료!
 
 ╔══════════════════════════════════════════════════════╗
-║  teamify v2.1.0 installed! / 설치 완료!             ║
+║  tofu-at v2.1.0 installed! / 설치 완료!             ║
 ╚══════════════════════════════════════════════════════╝
 
   OS: WSL  |  tmux: 3.4  |  Node: v20.18.0
 
   Next steps / 다음 단계:
     1. claude --model=opus[1m]
-    2. Type /teamify / /teamify 입력
+    2. Type /tofu-at / /tofu-at 입력
 
   (Optional / 선택) ai/ain shortcuts / 단축키 설정:
-    bash /tmp/teamify/setup-bashrc.sh /home/user/my-project
+    bash /tmp/tofu-at/setup-bashrc.sh /home/user/my-project
 ```
 
 ![설치 완료 화면](screenshots/step1-install-complete.png)
@@ -231,11 +231,11 @@ bash /tmp/teamify/install.sh
 my-project/
 ├── .claude/
 │   ├── commands/
-│   │   └── teamify.md          ← /teamify 명령어
+│   │   └── tofu-at.md          ← /tofu-at 명령어
 │   ├── skills/
-│   │   ├── teamify-workflow.md
-│   │   ├── teamify-registry-schema.md
-│   │   └── teamify-spawn-templates.md
+│   │   ├── tofu-at-workflow.md
+│   │   ├── tofu-at-registry-schema.md
+│   │   └── tofu-at-spawn-templates.md
 │   └── settings.local.json     ← 자동 구성됨
 └── .team-os/
     ├── registry.yaml
@@ -281,18 +281,18 @@ claude --model=opus[1m]
 
 > `opus[1m]`은 1M 토큰 컨텍스트 모드입니다. Agent Teams에 권장됩니다.
 
-### 2.2 /teamify 실행
+### 2.2 /tofu-at 실행
 
 Claude Code 프롬프트에서:
 
 ```
-/teamify
+/tofu-at
 ```
 
 메뉴가 표시됩니다:
 
 ```
-teamify — Agent Team Builder
+tofu-at — Agent Team Builder
 
 Choose an action:
   1. Scan a workflow → analyze & propose team
@@ -301,7 +301,7 @@ Choose an action:
   4. Catalog → save team to registry
 ```
 
-![teamify 메뉴](screenshots/step2-teamify-menu.png)
+![tofu-at 메뉴](screenshots/step2-tofu-at-menu.png)
 
 ### 2.3 성공 확인
 
@@ -309,7 +309,7 @@ Choose an action:
 
 **간단한 테스트:**
 ```
-/teamify inventory
+/tofu-at inventory
 ```
 → 프로젝트의 skills, agents, MCP 서버 목록이 표시됩니다.
 
@@ -494,10 +494,10 @@ WSL에서는 Windows 파일시스템(`/mnt/c/...`)보다 Linux 파일시스템(`
 
 ## 추가 자료
 
-- **GitHub**: https://github.com/treylom/teamify
+- **GitHub**: https://github.com/treylom/tofu-at
 - **README**: 영어 문서 및 상세 아키텍처
 - **Claude Code 공식 문서**: https://docs.anthropic.com/en/docs/claude-code
 
 ---
 
-*이 가이드에 대한 피드백이나 문제점은 [GitHub Issues](https://github.com/treylom/teamify/issues)에 남겨주세요.*
+*이 가이드에 대한 피드백이나 문제점은 [GitHub Issues](https://github.com/treylom/tofu-at/issues)에 남겨주세요.*

@@ -79,12 +79,12 @@ info "Project dir: $PROJECT_DIR"
 info "Auto-push: $AUTO_PUSH"
 
 # ─── Marker Constants ──────────────────────────────────
-MARKER_START="# >>> teamify >>>"
-MARKER_END="# <<< teamify <<<"
+MARKER_START="# >>> tofu-at >>>"
+MARKER_END="# <<< tofu-at <<<"
 
 # ─── Check for Existing Installation ───────────────────
 if grep -q "$MARKER_START" "$RC_FILE" 2>/dev/null; then
-  warn "teamify functions already installed in $RC_FILE"
+  warn "tofu-at functions already installed in $RC_FILE"
   warn "Removing old installation... / 기존 설치를 제거합니다..."
   # Remove old block (sed between markers, inclusive)
   sed -i "/$MARKER_START/,/$MARKER_END/d" "$RC_FILE"
@@ -100,7 +100,7 @@ fi
 
 # ─── Generate Function Block ───────────────────────────
 FUNC_BLOCK="$MARKER_START
-# teamify shell functions - installed $(date +%Y-%m-%d)
+# tofu-at shell functions - installed $(date +%Y-%m-%d)
 # Project: $PROJECT_DIR
 # Auto-push: $AUTO_PUSH
 
@@ -214,7 +214,7 @@ echo "$FUNC_BLOCK" >> "$RC_FILE"
 
 echo ""
 echo -e "${GREEN}============================================${NC}"
-echo -e "${GREEN}  teamify shell functions installed!${NC}"
+echo -e "${GREEN}  tofu-at shell functions installed!${NC}"
 echo -e "${GREEN}  셸 함수 설치 완료!${NC}"
 echo -e "${GREEN}============================================${NC}"
 echo ""

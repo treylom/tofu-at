@@ -1,9 +1,19 @@
 # Changelog
 
+## [2.2.0] - 2026-02-22
+
+### Changed
+- **Project renamed**: `teamify` → `Tofu-AT` (Tofu-Agent Teams)
+- Command: `/teamify` → `/tofu-at`
+- Command: `/teamify_codex` → `/tofu-at-codex`
+- Skills: `teamify-*.md` → `tofu-at-*.md`
+- GitHub repo: `treylom/teamify` → `treylom/tofu-at`
+- All internal references updated
+
 ## [2.1.1] - 2026-02-19
 
 ### Added
-- **Prerequisite Context Loading** in `/teamify scan` (Step 2-1.5)
+- **Prerequisite Context Loading** in `/tofu-at scan` (Step 2-1.5)
   - Auto-reads CHANGELOG.md, BUGS.md from target file's directory
   - Auto-reads matching Bug_Reports/ by component name (max 3 files)
   - Scoped search only (no full-codebase scan)
@@ -19,7 +29,7 @@
 ### Added
 - **`setup-bashrc.sh`** — Shell function installer for ai/ain/cleanup/ai-sync commands
   - Supports bash and zsh (`--shell=zsh`)
-  - Idempotent: marker-based duplicate prevention (`# >>> teamify >>>`)
+  - Idempotent: marker-based duplicate prevention (`# >>> tofu-at >>>`)
   - `--with-auto-push` flag for optional auto git sync on Claude exit
   - Project path parameterized (no hardcoding)
 - **`docs/installation-guide.md`** — Step-by-step Korean installation guide for Notion
@@ -50,7 +60,7 @@
 
 ### Initial Release
 
-- `/teamify` command with 6 modes: interactive, scan, inventory, spawn, catalog, clone
+- `/tofu-at` command with 6 modes: interactive, scan, inventory, spawn, catalog, clone
 - 3 skill files: workflow engine, registry schema, spawn templates
 - `.team-os` infrastructure: registry, hooks, artifacts
 - Dynamic resource scanning (MCP, CLI, Skills, Agents)

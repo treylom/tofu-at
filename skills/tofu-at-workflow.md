@@ -1,11 +1,11 @@
 ---
-name: teamify-workflow
-description: 워크플로우 분석 + 리소스 동적 탐색 + Agent Teams 분해 로직. /teamify 커맨드의 핵심 엔진.
+name: tofu-at-workflow
+description: 워크플로우 분석 + 리소스 동적 탐색 + Agent Teams 분해 로직. /tofu-at 커맨드의 핵심 엔진.
 ---
 
-# Teamify Workflow Engine
+# Tofu-AT Workflow Engine
 
-> `/teamify` 커맨드의 핵심 분석 엔진.
+> `/tofu-at` 커맨드의 핵심 분석 엔진.
 > 리소스 탐색 → 워크플로우 분석 → 에이전트 유닛 분해 → 팀 구성안 생성.
 
 ---
@@ -184,7 +184,7 @@ Read(대상 파일) → 전문 읽기
 
 ```
 target_dir = 대상 파일의 디렉토리
-component_name = 대상 파일명에서 접두사 추출 (예: teamify-workflow.md → "teamify")
+component_name = 대상 파일명에서 접두사 추출 (예: tofu-at-workflow.md → "tofu-at")
 
 1. 대상 파일 디렉토리
    Glob("{target_dir}/CHANGELOG.md") → 있으면 최근 5개 ## 엔트리 추출
@@ -224,7 +224,7 @@ component_name = 대상 파일명에서 접두사 추출 (예: teamify-workflow.
 prerequisites:
   source_files:     # 실제로 읽은 파일 경로 목록
     - ".claude/skills/CHANGELOG.md"
-    - "Bug_Reports/Bug-2026-01-06-teamify-issue.md"
+    - "Bug_Reports/Bug-2026-01-06-tofu-at-issue.md"
   recent_changes:   # CHANGELOG에서 추출한 최근 변경
     - "[2026-02-19] install.sh 전면 개선 — OS감지, settings.local.json 자동구성"
   known_issues:     # BUGS.md + Bug_Reports에서 추출한 미해결 이슈
@@ -357,7 +357,7 @@ outline.md defaults.routing_policy 기반:
 | dashboard, monitor, event, log, collect, sse, websocket | **Ops** | `ops.dashboard.*` | ops.dashboard.collector |
 | test, verify, lint, quality, hook, gate, ownership | **QA** | `qa.*` | qa.hooks.quality-gates |
 | design, layout, component, UI, frontend, react, css | **Frontend** | `frontend.*` | frontend.dashboard.ui |
-| prompt, generate, template, teamify, clone, catalog | **Foundation** | `wf.teamify.*` | wf.teamify.classify-and-catalog |
+| prompt, generate, template, tofu-at, clone, catalog | **Foundation** | `wf.tofu-at.*` | wf.tofu-at.classify-and-catalog |
 
 ### 카테고리 매칭 알고리즘
 
@@ -410,7 +410,7 @@ outline.md defaults.routing_policy 기반:
 ## 5.5 /prompt 파이프라인 통합
 
 > STEP 3 워크플로우 분석 결과가 STEP 5의 /prompt 내재화 파이프라인에 입력됩니다.
-> 파이프라인 상세: `teamify-spawn-templates.md` 섹션 7.5 (매핑) + 7.6 (서브스텝) 참조.
+> 파이프라인 상세: `tofu-at-spawn-templates.md` 섹션 7.5 (매핑) + 7.6 (서브스텝) 참조.
 
 ### 데이터 흐름: 워크플로우 분석 → 프롬프트 파이프라인
 
@@ -426,7 +426,7 @@ outline.md defaults.routing_policy 기반:
 
 워크플로우 분석의 카테고리(섹션 4)와 /prompt 목적, expert-domain-priming.md 도메인을 교차 매핑합니다.
 
-| teamify 카테고리 (섹션 4) | /prompt 목적 | expert 도메인 |
+| tofu-at 카테고리 (섹션 4) | /prompt 목적 | expert 도메인 |
 |-------------------------|-------------|--------------|
 | Ingest (crawl, scrape, extract) | 에이전트/자동화 | 4.1 Tech/AI |
 | Analyze (analyze, summarize, tag) | 분석/리서치 | 4.5 Data/Analytics |

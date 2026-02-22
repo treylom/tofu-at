@@ -1,11 +1,11 @@
 ---
-name: teamify-registry-schema
-description: Team Registry YAML 스키마 정의 + environment 필드 + 검증 규칙 + 예시 3개. /teamify가 팀 템플릿을 생성/검증할 때 참조.
+name: tofu-at-registry-schema
+description: Team Registry YAML 스키마 정의 + environment 필드 + 검증 규칙 + 예시 3개. /tofu-at가 팀 템플릿을 생성/검증할 때 참조.
 ---
 
 # Team Registry YAML Schema
 
-> `/teamify`가 생성하는 팀 템플릿의 표준 스키마.
+> `/tofu-at`가 생성하는 팀 템플릿의 표준 스키마.
 > 저장 위치: `.team-os/registry.yaml`
 
 ---
@@ -87,7 +87,7 @@ teams:
 
 ```yaml
 team_id: "{category}.{workflow}.{variant}"
-# 예: km.ingest.web.standard, ops.dashboard.collector, wf.teamify.classify-and-catalog
+# 예: km.ingest.web.standard, ops.dashboard.collector, wf.tofu-at.classify-and-catalog
 ```
 
 네이밍 규칙:
@@ -232,7 +232,7 @@ conflict_prevention:
 
 ```yaml
 invoke:
-  command: "/teamify spawn {team_id}"
+  command: "/tofu-at spawn {team_id}"
   alt_prompt: "Create agent team: {purpose}"
   args:                          # 선택적 인자
     - "--url <URL>"
@@ -256,7 +256,7 @@ invoke:
 [ ] inputs, outputs가 비어있지 않음
 [ ] quality_gates에 최소 teammate_idle 또는 task_completed 존재
 [ ] conflict_prevention.rules에 최소 1개 규칙 존재
-[ ] invoke.command가 /teamify spawn 형식
+[ ] invoke.command가 /tofu-at spawn 형식
 ```
 
 ---
@@ -327,7 +327,7 @@ invoke:
       - "워커는 vault 파일 직접 수정 금지 (분석/저장 팀으로 넘김)"
       - "쓰기는 리드(lead_ingest)만 수행"
   invoke:
-    command: "/teamify spawn km.ingest.web.standard --url <URL>"
+    command: "/tofu-at spawn km.ingest.web.standard --url <URL>"
     alt_prompt: "Create an agent team to extract and clean web content"
 ```
 
@@ -393,7 +393,7 @@ invoke:
       - "vault 원본은 read-only, 인덱스만 생성/갱신"
       - "graph_indexer와 tag_folder_profiler는 서로 다른 출력 파일 담당"
   invoke:
-    command: "/teamify spawn km.graph.build-index --vault <PATH>"
+    command: "/tofu-at spawn km.graph.build-index --vault <PATH>"
     alt_prompt: "Create an agent team to build GraphRAG index for vault"
 ```
 
@@ -453,7 +453,7 @@ invoke:
       - "collector는 read-only로 ~/.claude/만 읽고, .team-os/에만 기록"
       - "event_collector와 summarizer는 서로 다른 출력 담당"
   invoke:
-    command: "/teamify spawn ops.dashboard.collector --team <TEAM_NAME>"
+    command: "/tofu-at spawn ops.dashboard.collector --team <TEAM_NAME>"
     alt_prompt: "Create an agent team to build dashboard event collector"
 ```
 
@@ -461,14 +461,14 @@ invoke:
 
 ## 6. team_id 네이밍 카탈로그 (30+ 템플릿)
 
-> outline.md 기반 전체 카탈로그. 각 팀의 상세 스펙은 `/teamify catalog` 명령으로 생성.
+> outline.md 기반 전체 카탈로그. 각 팀의 상세 스펙은 `/tofu-at catalog` 명령으로 생성.
 
 | Category | team_id | 구성 요약 | 모델 정책 |
 |----------|---------|----------|----------|
-| Foundation | wf.teamify.clone-and-version | 팀장1+워커2 | Lead=Opus, 팀장=Sonnet, 워커=Haiku |
-| Foundation | wf.teamify.classify-and-catalog | 팀장1+워커3 | Sonnet+Haiku |
-| Foundation | wf.teamify.spawn-runbook | 팀장1+워커2 | Sonnet+Haiku |
-| Foundation | wf.teamify.retrospective | 팀장1+워커2 | Sonnet+Haiku |
+| Foundation | wf.tofu-at.clone-and-version | 팀장1+워커2 | Lead=Opus, 팀장=Sonnet, 워커=Haiku |
+| Foundation | wf.tofu-at.classify-and-catalog | 팀장1+워커3 | Sonnet+Haiku |
+| Foundation | wf.tofu-at.spawn-runbook | 팀장1+워커2 | Sonnet+Haiku |
+| Foundation | wf.tofu-at.retrospective | 팀장1+워커2 | Sonnet+Haiku |
 | Ingest | km.ingest.web.standard | Ingest팀장+Scraper+Cleaner | Sonnet+Sonnet+Haiku |
 | Ingest | km.ingest.web.stealth | Ingest팀장+StealthScraper+QA | Sonnet+Sonnet |
 | Ingest | km.ingest.pdf.simple | Ingest팀장+PDFWorker | Sonnet+Sonnet |

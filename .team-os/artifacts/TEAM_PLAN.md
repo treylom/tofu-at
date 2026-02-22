@@ -1,3 +1,3 @@
 # Team Plan
 
-> This file is auto-initialized by teamify. Lead populates it after TeamCreate.
+> This file is auto-initialized by tofu-at. Lead populates it after TeamCreate.

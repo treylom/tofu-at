@@ -1757,7 +1757,7 @@ async function fetchReports() {
     // sourceCommand 추론 (기존 보고서 호환)
     reports.forEach(r => {
       if (!r.sourceCommand) {
-        r.sourceCommand = (r.teamName || '').includes('km-at') ? '/knowledge-manager-at' : '/teamify';
+        r.sourceCommand = (r.teamName || '').includes('km-at') ? '/knowledge-manager-at' : '/tofu-at';
       }
     });
 
@@ -1765,7 +1765,7 @@ async function fetchReports() {
       if (countEl) countEl.textContent = '0';
       const filterEl = document.getElementById('results-filter');
       if (filterEl) filterEl.innerHTML = '';
-      listEl.innerHTML = '<div class="results-empty">No reports yet. Run /teamify to generate team execution reports.</div>';
+      listEl.innerHTML = '<div class="results-empty">No reports yet. Run /tofu-at to generate team execution reports.</div>';
       return;
     }
 

@@ -3,11 +3,11 @@ description: 워크플로우를 Agent Teams(Split Pane)로 변환 - 리소스 �
 allowedTools: Task, Read, Write, Bash, Glob, Grep, AskUserQuestion, TeamCreate, TeamDelete, TaskCreate, TaskUpdate, TaskList, SendMessage, ToolSearch
 ---
 
-# /teamify - Agent Teams 워크플로우 변환기
+# /tofu-at - Agent Teams 워크플로우 변환기
 
 > **Version**: 2.0.0
 > 기존/신규 워크플로우를 Agent Teams(Split Pane/Swarm)로 변환합니다.
-> 참조 스킬: `teamify-workflow.md`, `teamify-registry-schema.md`, `teamify-spawn-templates.md`
+> 참조 스킬: `tofu-at-workflow.md`, `tofu-at-registry-schema.md`, `tofu-at-spawn-templates.md`
 
 $ARGUMENTS
 
@@ -154,7 +154,7 @@ Why: 인프라 미비 상태에서 scan/spawn 모드로 진입하면 STEP 7에�
 
 ## STEP 0-SETUP: 환경설정 (첫 실행 또는 `setup` 서브커맨드)
 
-**첫 실행 자동 감지 또는 `/teamify setup` 명시 실행 시 이 STEP을 수행합니다.**
+**첫 실행 자동 감지 또는 `/tofu-at setup` 명시 실행 시 이 STEP을 수행합니다.**
 **목적: 최소한의 인프라를 구성하여 이후 scan/spawn 등이 정상 작동하도록 보장.**
 
 ### Setup-0: 설치 가이드 문서 참조 (CRITICAL)
@@ -164,11 +164,11 @@ AI 에이전트(Claude Code)가 직접 읽을 수 있는 순수 텍스트 형식
 
 ```
 1. 빠른 설치 요약:
-   WebFetch("https://teamify-docs-jviqkn6x.manus.space/llms.txt")
+   WebFetch("https://tofu-at-docs-jviqkn6x.manus.space/llms.txt")
    → 설치 명령어, 시스템 요구사항, 핵심 정보 요약
 
 2. 전체 설치 가이드 (상세):
-   WebFetch("https://teamify-docs-jviqkn6x.manus.space/llms-full.txt")
+   WebFetch("https://tofu-at-docs-jviqkn6x.manus.space/llms-full.txt")
    → 단계별 설치, 설정, 검증, 플랫폼별 가이드, 문제 해결까지 포함
 
 3. 읽기 우선순위:
@@ -177,7 +177,7 @@ AI 에이전트(Claude Code)가 직접 읽을 수 있는 순수 텍스트 형식
    - 설치 중 문제 발생: llms-full.txt의 문제 해결 섹션 참조
 ```
 
-> **참고**: 메인 페이지(https://teamify-docs-jviqkn6x.manus.space/)는 React SPA이므로
+> **참고**: 메인 페이지(https://tofu-at-docs-jviqkn6x.manus.space/)는 React SPA이므로
 > WebFetch로 읽을 수 없습니다. 반드시 `/llms.txt` 또는 `/llms-full.txt` 경로를 사용하세요.
 
 Why: 설치 가이드 문서에 최신 설치 절차, 플랫폼별 주의사항, 문제 해결이 포함되어 있어
@@ -263,20 +263,20 @@ Agent Office는 팀 대시보드로, 팀 운영 시 실시간 모니터링에 �
 2. agent_office_found = false 일 때:
    → 사용자에게 안내:
      "Agent Office(팀 대시보드)가 설치되지 않았습니다.
-      teamify 전체 설치를 진행합니다."
+      tofu-at 전체 설치를 진행합니다."
 
    → install.sh 실행 (2가지 방법, 순서대로 시도):
 
-   방법 A (teamify 리포가 로컬에 있는 경우):
-     Glob("teamify/install.sh") → 존재하면:
-       Bash("bash teamify/install.sh")
+   방법 A (tofu-at 리포가 로컬에 있는 경우):
+     Glob("tofu-at/install.sh") → 존재하면:
+       Bash("bash tofu-at/install.sh")
 
    방법 B (없는 경우 — GitHub에서 다운로드):
-     Bash("curl -fsSL https://raw.githubusercontent.com/treylom/teamify/main/install.sh | bash")
+     Bash("curl -fsSL https://raw.githubusercontent.com/treylom/tofu-at/main/install.sh | bash")
 
    → install.sh가 다음을 자동 수행:
      - 필수 도구 확인 (git, node, tmux, claude)
-     - teamify 파일 설치 (.claude/commands, .claude/skills)
+     - tofu-at 파일 설치 (.claude/commands, .claude/skills)
      - .team-os/ 인프라 설정 (hooks, artifacts, registry)
      - Agent Office 복사 + npm install
      - settings.local.json 구성
@@ -286,22 +286,22 @@ Agent Office는 팀 대시보드로, 팀 운영 시 실시간 모니터링에 �
      "Agent Office 설치에 실패했습니다.
 
       수동 설치 방법:
-        git clone https://github.com/treylom/teamify /tmp/teamify
-        bash /tmp/teamify/install.sh
+        git clone https://github.com/treylom/tofu-at /tmp/tofu-at
+        bash /tmp/tofu-at/install.sh
 
       상세 가이드 참조:
-        WebFetch('https://teamify-docs-jviqkn6x.manus.space/llms-full.txt')
+        WebFetch('https://tofu-at-docs-jviqkn6x.manus.space/llms-full.txt')
         → 문제 해결(Troubleshooting) 섹션에서 플랫폼별 해결 방법을 확인하세요."
 ```
 
-Why: Agent Office는 teamify GitHub 리포에 포함. install.sh 한 줄로 전체 인프라 설치.
+Why: Agent Office는 tofu-at GitHub 리포에 포함. install.sh 한 줄로 전체 인프라 설치.
 실패 시 docs URL에서 문제 해결 가이드를 참조할 수 있도록 안내.
 
 ### Setup-6: 모델 + 컨텍스트 안내
 
 ```
 현재 모델이 opus가 아니거나 1M이 아닌 경우:
-  "teamify는 opus 1M 컨텍스트에서 최적 작동합니다.
+  "tofu-at는 opus 1M 컨텍스트에서 최적 작동합니다.
    다음에 CC를 시작할 때: claude --model=opus[1m]
    현재 세션에서 전환: /model opus[1m]"
 ```
@@ -321,7 +321,7 @@ Why: Agent Office는 teamify GitHub 리포에 포함. install.sh 한 줄로 전�
 | Agent Office | ✅ 설치됨 / ❌ 설치 실패 (수동 설치 안내) |
 | 모델 | {현재 모델} (권장: opus[1m]) |
 
-환경설정이 완료되었습니다. 이제 /teamify를 사용할 수 있습니다.
+환경설정이 완료되었습니다. 이제 /tofu-at를 사용할 수 있습니다.
 ```
 
 ### Setup 종료 분기
@@ -329,12 +329,12 @@ Why: Agent Office는 teamify GitHub 리포에 포함. install.sh 한 줄로 전�
 ```
 IF Agent Office 설치 성공 (agent_office_found == true):
   IF setup 서브커맨드로 진입:
-    → "환경설정 완료. /teamify를 사용할 수 있습니다."
+    → "환경설정 완료. /tofu-at를 사용할 수 있습니다."
     → 사용법 안내:
-      "/teamify — 인터랙티브 모드로 시작
-       /teamify scan <경로> — 스킬/에이전트 분석 → 팀 구성
-       /teamify inventory — 사용 가능 리소스 조회
-       /teamify spawn <team_id> — 팀 즉시 생성"
+      "/tofu-at — 인터랙티브 모드로 시작
+       /tofu-at scan <경로> — 스킬/에이전트 분석 → 팀 구성
+       /tofu-at inventory — 사용 가능 리소스 조회
+       /tofu-at spawn <team_id> — 팀 즉시 생성"
     → 종료
 
   IF 첫 실행 자동감지로 진입:
@@ -345,12 +345,12 @@ IF Agent Office 설치 실패:
   → "Agent Office 설치에 실패했습니다.
 
      수동 설치:
-       git clone https://github.com/treylom/teamify /tmp/teamify && bash /tmp/teamify/install.sh
+       git clone https://github.com/treylom/tofu-at /tmp/tofu-at && bash /tmp/tofu-at/install.sh
 
      상세 가이드 (AI가 직접 읽을 수 있는 텍스트):
-       https://teamify-docs-jviqkn6x.manus.space/llms-full.txt
+       https://tofu-at-docs-jviqkn6x.manus.space/llms-full.txt
 
-     설치 완료 후 /teamify setup을 다시 실행하세요."
+     설치 완료 후 /tofu-at setup을 다시 실행하세요."
   → 종료 (원래 모드로 복귀하지 않음)
 ```
 
@@ -362,7 +362,7 @@ IF Agent Office 설치 실패:
 
 ### 0.5-0. 모델 + 컨텍스트 확인
 
-**teamify는 대규모 워크플로우를 처리하므로 Opus 1M 컨텍스트를 권장합니다.**
+**tofu-at는 대규모 워크플로우를 처리하므로 Opus 1M 컨텍스트를 권장합니다.**
 
 CC 시작 시 아래 명령으로 실행하면 1M 컨텍스트 사용 가능:
 ```
@@ -383,7 +383,7 @@ claude --model=opus[1m]
 > 이 설정은 구독 플랜(Max/Pro)과는 별도이며, API 사용자도 동일합니다.
 
 현재 모델이 opus가 아니거나 1M이 아닌 경우, 사용자에게 안내:
-> "teamify는 opus 1M 컨텍스트에서 최적 작동합니다.
+> "tofu-at는 opus 1M 컨텍스트에서 최적 작동합니다.
 > 다음에 CC를 시작할 때 `claude --model=opus[1m]`으로 실행해 주세요.
 > 현재 세션에서도 `/model opus[1m]`으로 전환할 수 있습니다.
 > 현재 세션에서도 계속 진행 가능하지만, 대규모 팀 운영 시 컨텍스트 부족이 발생할 수 있습니다."
@@ -515,7 +515,7 @@ team_os_status를 아래 순서로 확인:
   → 실패 시: 수동 폴백 (아래 mkdir 방식)
 - IF 전체 bootstrap 필요 AND agent_office_path == null:
   Bash("mkdir -p .team-os/artifacts .team-os/hooks .team-os/spawn-prompts .team-os/consensus .team-os/graphrag .team-os/reports") 수동 초기화
-  → 사용자에게 안내: "/teamify setup으로 Agent Office를 설치하세요"
+  → 사용자에게 안내: "/tofu-at setup으로 Agent Office를 설치하세요"
 - ELIF repair 필요 AND agent_office_path != null:
   Bash("AGENT_OFFICE_ROOT=$(pwd) node -e \"const b=require('{agent_office_path}/lib/team-os-bootstrap');console.log(JSON.stringify(b.bootstrapTeamOS(process.env.AGENT_OFFICE_ROOT||process.cwd(),{repair:true})))\"") 실행
 - ELSE:
@@ -531,7 +531,7 @@ Glob(".team-os/artifacts/*") → 아티팩트 디렉토리 존재 여부
 ## STEP 1: 리소스 동적 탐색 (CRITICAL)
 
 **팀 구성 전 반드시 현재 사용 가능한 모든 리소스를 스캔합니다.**
-**상세 알고리즘: `teamify-workflow.md` 섹션 1 참조.**
+**상세 알고리즘: `tofu-at-workflow.md` 섹션 1 참조.**
 
 ### 실행 순서
 
@@ -554,14 +554,14 @@ Glob(".team-os/artifacts/*") → 아티팩트 디렉토리 존재 여부
    - (macOS) which tmux
 
 4. Phase D: 최적 경로 결정
-   - teamify-workflow.md의 MCP vs CLI 매트릭스 적용
+   - tofu-at-workflow.md의 MCP vs CLI 매트릭스 적용
    - 결과를 tool_paths 변수에 저장
 ```
 
 ### inventory 모드일 때
 
 Phase A~D 완료 후 인벤토리 테이블을 사용자에게 출력합니다.
-`teamify-workflow.md`의 "리소스 인벤토리 출력 포맷" 참조.
+`tofu-at-workflow.md`의 "리소스 인벤토리 출력 포맷" 참조.
 
 inventory 모드면 여기서 종료. scan 모드면 STEP 3으로 진행 (STEP 2는 이미 STEP 0 직후에 완료됨). spawn 모드면 STEP 7로 진행. catalog 모드면 STEP 4로 진행.
 
@@ -637,7 +637,7 @@ AskUserQuestion 호출 — questions 배열에 2개 질문:
 - "OFF" → `ralph_loop.enabled = false`
 - "ON (최대 5회)" → `ralph_loop.enabled = true, max_iterations = 5`
 - "ON (최대 10회)" → `ralph_loop.enabled = true, max_iterations = 10`
-- 상세 참조: `teamify-workflow.md` 섹션 8, `.claude/reference/ralph-loop-research.md`
+- 상세 참조: `tofu-at-workflow.md` 섹션 8, `.claude/reference/ralph-loop-research.md`
 
 **Devil's Advocate 설정 적용**:
 - "OFF" → `devil_advocate.enabled = false`
@@ -659,7 +659,7 @@ AskUserQuestion 호출 — questions 배열에 2개 질문:
 ## STEP 3: 워크플로우 분석 (scan 모드)
 
 **대상 파일을 읽고 에이전트 유닛으로 분해합니다.**
-**상세 알고리즘: `teamify-workflow.md` 섹션 2-5 참조.**
+**상세 알고리즘: `tofu-at-workflow.md` 섹션 2-5 참조.**
 
 ### 실행 순서
 
@@ -678,7 +678,7 @@ AskUserQuestion 호출 — questions 배열에 2개 질문:
 
 ### 분석 결과 출력
 
-`teamify-workflow.md`의 "팀 구성안 생성 출력 포맷" 참조.
+`tofu-at-workflow.md`의 "팀 구성안 생성 출력 포맷" 참조.
 
 <!-- MANDATORY_INTERACTION: STEP 3 -->
 > ⛔ **STOP — 분석 결과 출력 후 반드시 AskUserQuestion을 호출하고 사용자 응답을 받으세요.**
@@ -702,7 +702,7 @@ AskUserQuestion 호출 — questions 배열에 1개 질문:
 ## STEP 4: 팀 템플릿 생성
 
 **STEP 3의 분석 결과를 Team Registry YAML로 변환합니다.**
-**스키마: `teamify-registry-schema.md` 참조.**
+**스키마: `tofu-at-registry-schema.md` 참조.**
 
 ### 실행 순서
 
@@ -717,21 +717,21 @@ AskUserQuestion 호출 — questions 배열에 1개 질문:
 5. inputs/outputs: STEP 3 입출력 패턴 기반
 6. quality_gates: STEP 2 게이트 수준 반영
 7. conflict_prevention: 파일 소유권 + 규칙
-8. invoke: /teamify spawn {team_id} 형식
+8. invoke: /tofu-at spawn {team_id} 형식
 ```
 
 ### 검증
 
-`teamify-registry-schema.md`의 "검증 규칙" 체크리스트 실행.
+`tofu-at-registry-schema.md`의 "검증 규칙" 체크리스트 실행.
 
 ---
 
 ## STEP 5: 스폰 프롬프트 생성 (/prompt 파이프라인 내재화)
 
 **각 팀원별로 /prompt 파이프라인을 실행하여 고품질 스폰 프롬프트를 생성합니다.**
-**템플릿: `teamify-spawn-templates.md` 참조.**
-**전문가 DB: `teamify-spawn-templates.md` 섹션 7.5에 27도메인 137명 전문가 완전 내장.**
-**파이프라인 상세: `teamify-spawn-templates.md` 섹션 7.5 (내장 DB + 매핑) + 7.6 (서브스텝) 참조.**
+**템플릿: `tofu-at-spawn-templates.md` 참조.**
+**전문가 DB: `tofu-at-spawn-templates.md` 섹션 7.5에 27도메인 137명 전문가 완전 내장.**
+**파이프라인 상세: `tofu-at-spawn-templates.md` 섹션 7.5 (내장 DB + 매핑) + 7.6 (서브스텝) 참조.**
 
 ### 실행 순서 (각 팀원에 대해 반복)
 
@@ -752,7 +752,7 @@ FOR each role in registry.roles:
     | lead, coordinator | 에이전트/자동화 |
 
   Step 5-2: Expert Domain Priming (Embedded DB)
-    1. teamify-spawn-templates.md §7.5의 내장 전문가 DB에서 domain 매칭
+    1. tofu-at-spawn-templates.md §7.5의 내장 전문가 DB에서 domain 매칭
     2. domain 내 best-match expert 선택 (task 키워드 vs 전문가 핵심 용어)
     3. expert_name + expert_framework + domain_vocabulary 추출
     4. <role> 블록에 <domain_vocabulary> 주입
@@ -773,7 +773,7 @@ FOR each role in registry.roles:
     [ ] 긍정형 프레이밍: "~해라" 우선
     [ ] 테이블 구조화: 규칙은 테이블로
     [ ] 이유(Why) 포함: 각 제약에 이유 명시
-    [ ] 토큰 예산 (6-Tier 유동 한도, teamify-spawn-templates.md 참조):
+    [ ] 토큰 예산 (6-Tier 유동 한도, tofu-at-spawn-templates.md 참조):
         T1 Explore: 1,200/1,800 | T2 Simple Worker: 1,500/2,500
         T3 General Worker: 2,000/3,500 | T4 Worker+Ralph: 2,500/4,000
         T5 Category Lead: 3,000/4,500 | T6 Lead+Ralph: 3,500/5,000
@@ -911,7 +911,7 @@ IF agent_office_path != null:
     "Windows 브라우저에서 직접 http://localhost:3747 을 열어주세요."
 
 ELSE:
-  "Agent Office 미설치. /teamify setup을 실행하여 설치해주세요.
+  "Agent Office 미설치. /tofu-at setup을 실행하여 설치해주세요.
    현재 팀은 대시보드 없이 진행됩니다.
    진행 상황: .team-os/artifacts/TEAM_PROGRESS.md"
 ```
@@ -919,7 +919,7 @@ ELSE:
 ### 7-2.5. 공유 메모리 초기화 (CRITICAL)
 
 **TeamCreate 직후, 팀원 스폰 전에 반드시 실행합니다.**
-**상세 설계: `teamify-workflow.md` 섹션 6 참조.**
+**상세 설계: `tofu-at-workflow.md` 섹션 6 참조.**
 
 ```
 # 메모리 계층 자동 선택
@@ -1502,7 +1502,7 @@ PRECONDITION (셧다운 전제 조건 — DA 활성화 시):
      "subject": "{purpose}",
      "complexity": "{complexity_level}",
      "duration": "{실행 소요 시간}",
-     "sourceCommand": "/teamify",
+     "sourceCommand": "/tofu-at",
      "team": [각 role의 { name, role, model, status }],
      "steps": [각 step의 { id, step, assignee, status }],
      "checkpoints": [각 checkpoint의 { name, done }],
@@ -1576,7 +1576,7 @@ report = {
   "subject": "{purpose}",
   "complexity": "{complexity_level}",
   "duration": "{실행 소요 시간}",
-  "sourceCommand": "/teamify",
+  "sourceCommand": "/tofu-at",
   "team": [
     { "name": "{role_name}", "role": "{Lead/Worker}", "model": "{Opus 4.6 [1M]}", "status": "{completed}" }
   ],
@@ -1641,7 +1641,7 @@ AskUserQuestion({
       "header": "커맨드명",
       "options": [
         {"label": "/{auto_name} (Recommended)", "description": "자동 생성 이름 — 다음부터 /{auto_name} 한 줄로 실행"},
-        {"label": "건너뛰기", "description": "커맨드 생성 안 함 (기존처럼 /teamify spawn ... 사용)"}
+        {"label": "건너뛰기", "description": "커맨드 생성 안 함 (기존처럼 /tofu-at spawn ... 사용)"}
       ],
       "multiSelect": false
     }
@@ -1649,7 +1649,7 @@ AskUserQuestion({
 })
 ```
 
-**"건너뛰기" 선택 시**: 기존처럼 `/teamify spawn {team_id}` 안내 후 종료.
+**"건너뛰기" 선택 시**: 기존처럼 `/tofu-at spawn {team_id}` 안내 후 종료.
 **추천 이름 또는 사용자 지정 이름 선택 시**: 아래 절차로 `.claude/commands/{name}.md` 파일 자동 생성.
 
 ### 9-1. 커맨드 파일 생성
@@ -1664,13 +1664,13 @@ Write(".claude/commands/{command_name}.md"):
 
 ```markdown
 ---
-description: {subject 또는 description} (teamify 생성 — /{command_name})
+description: {subject 또는 description} (tofu-at 생성 — /{command_name})
 allowedTools: Task, Read, Write, Bash, Glob, Grep, AskUserQuestion, TeamCreate, TeamDelete, TaskCreate, TaskUpdate, TaskList, SendMessage, ToolSearch
 ---
 
 # /{command_name}
 
-> teamify 자동 생성 커맨드. 원본 team_id: `{team_id}`
+> tofu-at 자동 생성 커맨드. 원본 team_id: `{team_id}`
 
 $ARGUMENTS
 
@@ -1687,9 +1687,9 @@ $ARGUMENTS
 > Agent Office 대시보드가 자동으로 실행됩니다 (port 3747).
 > 서버 헬스체크 → 포트 정리 → 서버 시작 → 브라우저 오픈이 자동으로 처리됩니다.
 
-이 커맨드는 `/teamify spawn {team_id}`와 동일한 워크플로우를 실행합니다.
+이 커맨드는 `/tofu-at spawn {team_id}`와 동일한 워크플로우를 실행합니다.
 
-Skill("teamify", args: "spawn {team_id}")
+Skill("tofu-at", args: "spawn {team_id}")
 ```
 
 ### 9-2. 사용자 안내
@@ -1703,7 +1703,7 @@ Skill("teamify", args: "spawn {team_id}")
 |------|---|
 | 커맨드 | `/{command_name}` |
 | 파일 | `.claude/commands/{command_name}.md` |
-| 원본 | `/teamify spawn {team_id}` |
+| 원본 | `/tofu-at spawn {team_id}` |
 
 다음부터는 아래 명령어로 동일한 팀을 즉시 실행할 수 있습니다:
 
@@ -1735,12 +1735,12 @@ Skill("teamify", args: "spawn {team_id}")
 
 | 기능 | 참조 스킬 |
 |------|----------|
-| 리소스 탐색 + 분석 알고리즘 | `teamify-workflow.md` |
-| YAML 스키마 + 예시 | `teamify-registry-schema.md` |
-| 스폰 프롬프트 템플릿 | `teamify-spawn-templates.md` |
+| 리소스 탐색 + 분석 알고리즘 | `tofu-at-workflow.md` |
+| YAML 스키마 + 예시 | `tofu-at-registry-schema.md` |
+| 스폰 프롬프트 템플릿 | `tofu-at-spawn-templates.md` |
 | CE 체크리스트 | `context-engineering-collection.md` |
 | /prompt 파이프라인 내재화 | `prompt.md` (목적감지, 요소확장, 전문가토론, CE) |
-| 전문가 도메인 프라이밍 | `teamify-spawn-templates.md` §7.5 (27도메인 137명 전문가 DB 내장) |
+| 전문가 도메인 프라이밍 | `tofu-at-spawn-templates.md` §7.5 (27도메인 137명 전문가 DB 내장) |
 | Claude 최적화 전략 | `claude-4.5-prompt-strategies.md` (default_to_action 등) |
 | Agent Teams 참조 구현 | `knowledge-manager.md` (STEP 3-6) |
 
@@ -1764,22 +1764,22 @@ Skill("teamify", args: "spawn {team_id}")
 | 아티팩트 파일은 `.team-os/artifacts/` | 소문자 memory/ 아닌 artifacts/ 에 저장 |
 | 대시보드 파서 포맷 고정 | TEAM_PROGRESS.md `## Status Board` + 5열 테이블 필수 |
 | TEAM_BULLETIN.md 형식 고정 | `## [YYYY-MM-DD HH:MM] - Agent Name` 형식 필수 |
-| Agent Office 필수 | 미설치 시 /teamify setup으로 설치 안내. 대시보드 없이도 핵심 기능은 작동하나, 설치 권장 |
+| Agent Office 필수 | 미설치 시 /tofu-at setup으로 설치 안내. 대시보드 없이도 핵심 기능은 작동하나, 설치 권장 |
 | 첫 실행 자동 setup | settings 또는 .team-os/ 미비 시 STEP 0-SETUP 자동 실행 |
 
 ---
 
 ## 수정 시 자동 동기화 규칙 (CRITICAL)
 
-**/teamify 수정 시 아래 항목을 반드시 함께 확인·업데이트합니다.**
+**/tofu-at 수정 시 아래 항목을 반드시 함께 확인·업데이트합니다.**
 
 | 수정 대상 | 함께 확인할 파일/섹션 | 이유 |
 |----------|-------------------|------|
 | STEP 0.5 (환경 감지) | WSL/tmux/브라우저 매트릭스, 제약 사항 테이블 WSL 항목 | env_profile 변경 시 제약 사항과 불일치 방지 |
-| STEP 5 (프롬프트 생성) | `teamify-spawn-templates.md` CE 체크리스트, 6-Tier 토큰 한도 | 커맨드↔스킬 간 토큰 정책 동기화 |
+| STEP 5 (프롬프트 생성) | `tofu-at-spawn-templates.md` CE 체크리스트, 6-Tier 토큰 한도 | 커맨드↔스킬 간 토큰 정책 동기화 |
 | STEP 7 (실행/대시보드) | `.team-os/artifacts/` 파일명·포맷, 제약 사항 테이블 | 대시보드 파서 호환 유지 |
 | 제약 사항 테이블 | STEP 0.5-3 env_profile, STEP 7-2.1, STEP 7-2.5 | 제약 추가 시 해당 STEP에도 반영 |
-| 참조 스킬 테이블 | `teamify-workflow.md`, `teamify-spawn-templates.md` | 스킬 파일 변경 시 커맨드 참조 업데이트 |
+| 참조 스킬 테이블 | `tofu-at-workflow.md`, `tofu-at-spawn-templates.md` | 스킬 파일 변경 시 커맨드 참조 업데이트 |
 
 ---
 

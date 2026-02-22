@@ -1,11 +1,11 @@
 ---
-name: teamify-spawn-templates
-description: Agent Teams 역할별 스폰 프롬프트 템플릿 + 도구 할당 + /prompt CE 통합. /teamify가 팀원 스폰 시 참조.
+name: tofu-at-spawn-templates
+description: Agent Teams 역할별 스폰 프롬프트 템플릿 + 도구 할당 + /prompt CE 통합. /tofu-at가 팀원 스폰 시 참조.
 ---
 
-# Teamify Spawn Prompt Templates
+# Tofu-AT Spawn Prompt Templates
 
-> `/teamify`가 팀원을 스폰할 때 사용하는 프롬프트 템플릿.
+> `/tofu-at`가 팀원을 스폰할 때 사용하는 프롬프트 템플릿.
 > 변수(`{{VAR}}`)를 실제 값으로 치환하여 사용.
 
 ---
@@ -1447,7 +1447,7 @@ Avoid: Overused fonts (Inter, Roboto), clichéd color schemes, predictable layou
 > | `gpt-5.2-prompt-enhancement.md` | GPT-5.2 전용 XML 패턴 상세 |
 > | `slide-prompt-guide.md` | 슬라이드/PPT 프롬프트 가이드 |
 >
-> 위 스킬은 `/prompt` 커맨드에서 사용되며, `/teamify`는 §7.5-7.8의 내장 콘텐츠만으로 작동합니다.
+> 위 스킬은 `/prompt` 커맨드에서 사용되며, `/tofu-at`는 §7.5-7.8의 내장 콘텐츠만으로 작동합니다.
 
 ---
 

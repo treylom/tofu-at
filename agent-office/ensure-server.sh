@@ -1,7 +1,7 @@
 #!/bin/bash
 # ensure-server.sh — Ensures Agent Office server is running
 # Usage: bash ensure-server.sh [project_root]
-# Called by: teamify spawn templates, knowledge-manager-at, etc.
+# Called by: tofu-at spawn templates, knowledge-manager-at, etc.
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="${1:-$(pwd)}"

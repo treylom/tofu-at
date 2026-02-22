@@ -149,7 +149,7 @@
 ### 변경 내용
 
 #### Part 1: 대시보드 자동 시작
-- [Added]: `/knowledge-manager`, `/teamify` 실행 시 대시보드 자동 시작 로직
+- [Added]: `/knowledge-manager`, `/tofu-at` 실행 시 대시보드 자동 시작 로직
   - curl로 포트 3747 확인 → 미실행 시 `node server.js --open` 백그라운드 시작
   - npm install 미완료 시 자동 설치 후 재시작
 
