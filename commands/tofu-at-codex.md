@@ -485,10 +485,12 @@ health = Bash("curl -s -o /dev/null -w '%{http_code}' http://localhost:3747/api/
 IF health == "200":
   → "Agent Office 이미 실행 중."
 ELSE:
-  # 2. 포트 정리
+  # 2. 포트 정리 (플랫폼별 분기)
+  # Windows: tofu-at-codex는 tmux 필수이므로 WSL 환경 가정 — lsof 사용
   Bash("lsof -ti:3747 | xargs kill -9 2>/dev/null || true")
 
   # 3. 서버 시작 (백그라운드 — run_in_background: true)
+  # Note: tofu-at-codex는 tmux(WSL) 필수이므로 $(pwd) 방식 사용 (Windows native 미지원)
   Bash("AGENT_OFFICE_ROOT=$(pwd) node {agent_office_path}/server.js --open", run_in_background: true)
 
   # 4. 헬스체크 루프 (최대 10초)
