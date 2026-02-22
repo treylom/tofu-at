@@ -617,7 +617,7 @@ function renderNodeGraph(km) {
     svgContent += `<rect x="${pos.x + 8}" y="${pos.y + NODE_H - 14}" width="${barW * pct / 100}" height="4" rx="2" fill="${fillColor}"/>`;
 
     // Status text (right-aligned) — uses 3-state label
-    const pctText = getProgressLabel(pct);
+    const pctText = getProgressLabel(pct, node);
     const pctColor = isDone ? '#3b82f6' : isActive ? '#22c55e' : '#fbbf24';
     svgContent += `<text x="${pos.x + NODE_W - 8}" y="${pos.y + NODE_H - 18}" text-anchor="end" fill="${pctColor}" font-size="11" font-weight="700" font-family="'JetBrains Mono', 'Noto Sans KR', monospace">${pctText}</text>`;
 
@@ -801,9 +801,19 @@ function formatLocalTime(str) {
 }
 
 // --- Status label helper (3-state: Waiting / 작업중 / Done) ---
-function getProgressLabel(pct) {
+// agent 객체의 note/task 필드에 "대기"/"waiting" 등 키워드가 있으면 Waiting으로 표시
+function getProgressLabel(pct, agent) {
   if (pct >= 100) return 'Done';
-  if (pct > 0) return '작업중';
+  if (pct > 0) {
+    if (agent) {
+      const text = ((agent.note || '') + ' ' + (agent.task || '')).toLowerCase();
+      if (text.includes('대기') || text.includes('waiting') || text.includes('awaiting')
+          || text.includes('idle') || text.includes('pending')) {
+        return 'Waiting';
+      }
+    }
+    return '작업중';
+  }
   return 'Waiting';
 }
 
@@ -897,7 +907,7 @@ function renderAgentTiles(agentsToRender, teamMembers, allAgents) {
       </div>
       ${model ? `<div class="agent-tile-model">${escHtml(model)}</div>` : ''}
       <div class="agent-tile-task">${escHtml(a.task) || 'Waiting...'}</div>
-      <div class="agent-tile-status-badge ${statusClass}">${getProgressLabel(pct)}</div>
+      <div class="agent-tile-status-badge ${statusClass}">${getProgressLabel(pct, a)}</div>
       <div class="agent-tile-footer">
         ${taskCountHtml}
         <span class="agent-tile-time">${escHtml(formatLocalTime(a.updated)) || ''}</span>
@@ -908,7 +918,14 @@ function renderAgentTiles(agentsToRender, teamMembers, allAgents) {
 
 function getAgentStatusClass(agent) {
   if (agent.progress >= 100) return 'status-done';
-  if (agent.progress > 0) return 'status-working';
+  if (agent.progress > 0) {
+    const text = ((agent.note || '') + ' ' + (agent.task || '')).toLowerCase();
+    if (text.includes('대기') || text.includes('waiting') || text.includes('awaiting')
+        || text.includes('idle') || text.includes('pending')) {
+      return 'status-waiting';
+    }
+    return 'status-working';
+  }
   return 'status-waiting';
 }
 
@@ -1757,7 +1774,7 @@ async function fetchReports() {
     // sourceCommand 추론 (기존 보고서 호환)
     reports.forEach(r => {
       if (!r.sourceCommand) {
-        r.sourceCommand = (r.teamName || '').includes('km-at') ? '/knowledge-manager-at' : '/tofu-at';
+        r.sourceCommand = (r.teamName || '').includes('km-at') ? '/knowledge-manager-at' : '/teamify';
       }
     });
 
@@ -1765,7 +1782,7 @@ async function fetchReports() {
       if (countEl) countEl.textContent = '0';
       const filterEl = document.getElementById('results-filter');
       if (filterEl) filterEl.innerHTML = '';
-      listEl.innerHTML = '<div class="results-empty">No reports yet. Run /tofu-at to generate team execution reports.</div>';
+      listEl.innerHTML = '<div class="results-empty">No reports yet. Run /teamify to generate team execution reports.</div>';
       return;
     }
 

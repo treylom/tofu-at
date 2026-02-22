@@ -191,6 +191,29 @@ roles:
       - "Read"
       - "Glob"
       - "Grep"
+    # source_agent (선택 필드)
+    # source_agent: ".claude/agents/thread-writer.md"
+```
+
+#### source_agent (선택 필드)
+
+```yaml
+# roles[].source_agent (optional)
+source_agent: string (optional)
+  # 기존 에이전트/스킬 md 파일 경로 (프로젝트 루트 기준 상대 경로)
+  # 설정 시 STEP 5에서 래퍼 모드 사용 (원본 파일 콘텐츠 보존)
+  # 예: ".claude/agents/thread-writer.md"
+  # 예: ".claude/skills/tofukyung-article-persona-v5.md"
+  # STEP 3 자동 감지 시 자동 설정됨
+```
+
+**source_agent 검증 규칙**:
+```
+[ ] source_agent 설정 시 해당 파일이 실제 존재하는지 Glob 확인
+[ ] source_agent와 subagent_type 호환:
+    - agent 파일의 allowedTools에 Write 포함 → subagent_type: general-purpose
+    - Write 미포함 → subagent_type: Explore
+[ ] source_agent 경로는 프로젝트 루트 기준 상대 경로
 ```
 
 **subagent_type 규칙**:
@@ -455,6 +478,56 @@ invoke:
   invoke:
     command: "/tofu-at spawn ops.dashboard.collector --team <TEAM_NAME>"
     alt_prompt: "Create an agent team to build dashboard event collector"
+```
+
+### 예시 4: 기존 에이전트를 팀원으로 통합 (source_agent 활용)
+
+```yaml
+- team_id: content.thread-writing.v1
+  purpose: "Threads 글 작성 + Obsidian/Notion 저장 팀"
+  environment:
+    teammate_mode: "tmux"
+    required_mcp: ["obsidian", "notion"]
+    required_cli: []
+    shared_memory:
+      layers: ["markdown"]
+      markdown_files: ["team_plan.md", "team_bulletin.md", "team_findings.md", "team_progress.md"]
+  models:
+    lead: opus
+    workers:
+      default: sonnet
+  roles:
+    - name: thread-writer
+      type: worker
+      count: 1
+      model: sonnet
+      subagent_type: general-purpose
+      source_agent: ".claude/agents/thread-writer.md"  # 기존 에이전트 그대로 사용
+      tools: ["Read", "Write", "Bash", "mcp__obsidian__create_note", "mcp__notion__API-post-page"]
+    - name: content-researcher
+      type: worker
+      count: 1
+      model: sonnet
+      subagent_type: Explore
+      # source_agent 없음 → STEP 5 템플릿 파이프라인으로 생성
+      tools: ["Read", "Glob", "Grep", "WebFetch"]
+  inputs:
+    - "topic"
+    - "user preferences"
+  outputs:
+    - ".team-os/artifacts/findings/content/thread.md"
+  quality_gates:
+    teammate_idle:
+      require_summary_message: true
+      require_bulletin_update: true
+    task_completed:
+      require_summary_schema: true
+  conflict_prevention:
+    rules:
+      - "쓰기는 리드만 수행"
+  invoke:
+    command: "/tofu-at spawn content.thread-writing.v1"
+    alt_prompt: "Create a thread writing team with existing thread-writer agent"
 ```
 
 ---
