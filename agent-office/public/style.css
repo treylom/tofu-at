@@ -233,7 +233,7 @@ body::before {
 }
 
 .mc-agents.empty::after {
-  content: 'No active agents. Run /knowledge-manager or /tofu-at to start.';
+  content: 'No active agents. Run /knowledge-manager or /teamify to start.';
   color: var(--text-muted);
   font-size: 12px;
   text-align: center;
@@ -1001,7 +1001,7 @@ body::before {
 
 /* === Team Plan Section === */
 .mc-plan.empty::after {
-  content: 'No active team plan. Plans appear when agents are spawned via /tofu-at.';
+  content: 'No active team plan. Plans appear when agents are spawned via /teamify.';
   color: var(--text-muted);
   font-size: 12px;
   display: block;
@@ -1115,7 +1115,7 @@ body::before {
 .mc-graph::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
 
 .mc-graph.empty::after {
-  content: 'No active agent flow. Run /tofu-at to see agent connections.';
+  content: 'No active agent flow. Run /teamify to see agent connections.';
   color: var(--text-muted);
   font-size: 12px;
   display: block;

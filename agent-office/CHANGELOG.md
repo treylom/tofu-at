@@ -2,6 +2,47 @@
 
 ---
 
+## [2026-02-22] - v3.6 (Tofu Theme Complete + 3-State Status + Agent Flow LTR)
+
+### 수정 파일
+- `public/style.css` — `.theme-tofu` 전체 오버라이드, 3-state status, status legend/badge
+- `public/app.js` — v3.3, setTheme() html 요소 기반, Agent Flow LTR 방향 전환, icon opacity Tofu 대응
+- `public/index.html` — Tofu mascot, status legend HTML, theme toggle 업데이트
+- `server.js` — 마이너 개선
+
+### 변경 내용
+
+#### Tofu Theme Complete (body.tofu → html.theme-tofu)
+- [Changed]: 테마 적용 방식 — `body.tofu` 클래스 → `.theme-tofu` (html 요소에 적용)
+- [Changed]: CSS 변수 전면 재정의 — accent: `#8b6f47` (따뜻한 갈색), bg-primary: `#faf7f2`
+- [Added]: `--text-primary: #2c1f14` — Team Plan/Checkpoint/Bulletin 등 진한 검정 폰트
+- [Added]: `.mc-plan-subject`, `.checkpoint-name`, `.item`, `.mc-search` 등 진한 색 오버라이드
+- [Added]: `.report-card-subject`, `.report-detail-title` 진한 색 오버라이드
+- [Added]: Tofu 마스코트 (`.tofu-mascot` — Tofu 테마에서만 표시)
+- [Added]: Tofu agent-tile 상태별 색상 강화 (working=green, waiting=amber, done=blue)
+- [Changed]: Agent Icon fill-opacity Tofu 대응 (0.2 → 0.35)
+- [Changed]: localStorage 키 `ao-theme` → `agent-office-theme`
+
+#### 3-State Agent Status (active/completed → working/waiting/done)
+- [Changed]: 에이전트 타일 2-state → 3-state 전환
+  - `.status-working` (green #22c55e, glow)
+  - `.status-waiting` (yellow #fbbf24, glow)
+  - `.status-done` (blue #3b82f6, glow)
+- [Added]: Status Badge — 진행률 바 대신 큰 폰트 상태 배지 (18px, 700 weight)
+- [Added]: Status Legend — Working/Waiting/Done 범례 표시
+- [Changed]: Legacy `.active`/`.completed` 클래스 하위 호환 유지
+
+#### Agent Flow LTR 방향 전환
+- [Changed]: 그래프 방향 — Lead → Workers (star) → Workers → CatLeads → DA → Lead (left-to-right)
+- [Changed]: Category Lead 계층 구조 — hierarchy 테이블 기반 매칭 유지, edge 방향 반전
+
+### 영향 범위
+- 영향받는 기능: 전체 UI (Dashboard, Agent Flow, Results)
+- Classic 테마: 변경 없음 (기존 :root 변수 유지)
+- 하위 호환: `.active`/`.completed` 레거시 클래스 지원
+
+---
+
 ## [2026-02-19] - v3.4 (Category Lead Hierarchy + Hierarchy Table Parsing)
 
 ### 수정 파일
@@ -149,7 +190,7 @@
 ### 변경 내용
 
 #### Part 1: 대시보드 자동 시작
-- [Added]: `/knowledge-manager`, `/tofu-at` 실행 시 대시보드 자동 시작 로직
+- [Added]: `/knowledge-manager`, `/teamify` 실행 시 대시보드 자동 시작 로직
   - curl로 포트 3747 확인 → 미실행 시 `node server.js --open` 백그라운드 시작
   - npm install 미완료 시 자동 설치 후 재시작
 

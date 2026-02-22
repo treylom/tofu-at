@@ -134,6 +134,7 @@ app.post('/api/session/clear', (_req, res) => {
 let _progressOverlay = {};
 
 app.post('/api/progress', (req, res) => {
+  res.set('Content-Type', 'application/json; charset=utf-8');
   const { agent, progress, task, note } = req.body;
   if (!agent) return res.status(400).json({ error: 'agent required' });
 
@@ -294,6 +295,12 @@ app.post('/api/reports', (req, res) => {
   try {
     if (!fs.existsSync(REPORTS_DIR)) fs.mkdirSync(REPORTS_DIR, { recursive: true });
     const report = req.body;
+
+    // Validate report body (guards against empty/corrupted payloads on Windows)
+    if (!report || typeof report !== 'object' || Object.keys(report).length === 0) {
+      return res.status(400).json({ error: 'Empty or invalid report body. Ensure Content-Type is application/json and body is valid JSON.' });
+    }
+
     // Ensure valid ISO 8601 UTC timestamp
     if (!report.timestamp || isNaN(new Date(report.timestamp).getTime())) {
       report.timestamp = new Date().toISOString();
@@ -302,8 +309,10 @@ app.post('/api/reports', (req, res) => {
     report.id = id;
     const filePath = path.join(REPORTS_DIR, `${id}.json`);
     fs.writeFileSync(filePath, JSON.stringify(report, null, 2), 'utf-8');
+    broadcast('reports_updated', { event: 'new_report', file: `${id}.json` });
     res.json({ success: true, id });
   } catch (e) {
+    console.error('[reports] POST error:', e.message);
     res.status(500).json({ error: e.message });
   }
 });

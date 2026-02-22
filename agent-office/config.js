@@ -13,7 +13,7 @@ const os = require('os');
  *   4. HOME fallback (Docker/CI where .claude lives in HOME only)
  */
 function detectProjectRoot() {
-  // 1. Explicit override — tofu-at always sets this on spawn
+  // 1. Explicit override — teamify always sets this on spawn
   if (process.env.AGENT_OFFICE_ROOT) {
     const root = process.env.AGENT_OFFICE_ROOT;
     if (fs.existsSync(path.join(root, '.claude'))) return root;

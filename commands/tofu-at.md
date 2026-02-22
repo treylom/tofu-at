@@ -186,9 +186,10 @@ Why: 설치 가이드 문서에 최신 설치 절차, 플랫폼별 주의사항,
 ### Setup-1: 플랫폼 감지
 
 ```
-1단계: WSL 감지 — Bash("uname -r 2>/dev/null")
+1단계: 플랫폼 감지 — Bash("uname -r 2>/dev/null")
   - 출력에 "microsoft" 포함 → env_platform = "wsl"
   - platform == "darwin" → env_platform = "macos"
+  - Bash("echo $WINDIR") 비어있지 않음 또는 Bash("uname -s") 출력에 "MINGW"/"MSYS" 포함 → env_platform = "windows"
   - 그 외 → env_platform = "linux"
 
 2단계: 사용자에게 플랫폼 표시
@@ -200,12 +201,16 @@ Why: 설치 가이드 문서에 최신 설치 절차, 플랫폼별 주의사항,
 ```
 | 도구 | 확인 방법 | 미설치 시 대응 |
 |------|----------|--------------|
-| tmux | Bash("which tmux 2>/dev/null") | wsl/linux: "sudo apt install tmux" 안내, macos: "brew install tmux" 안내 |
+| tmux | env_platform != "windows" 일 때만: Bash("which tmux 2>/dev/null") | wsl/linux: "sudo apt install tmux (권장, 필수 아님)" 안내, macos: "brew install tmux" 안내 |
 | Node.js | Bash("node --version 2>/dev/null") | "Node.js는 Agent Office(선택) 사용 시 필요합니다. https://nodejs.org" 안내 |
 ```
 
-tmux 미설치 시 경고만 표시하고 계속 진행.
-Why: VS Code 터미널에서는 in-process 모드로 폴백 가능하므로 tmux가 없어도 기본 작동은 가능.
+**tmux 플랫폼별 안내:**
+- **Windows (native)**: tmux 확인 자체를 스킵합니다. "Windows에서는 tmux 없이도 Agent Teams가 작동합니다 (in-process 모드). WSL 설치를 권장하지만 필수는 아닙니다."
+- **WSL**: "tmux를 권장하지만 필수는 아닙니다. 미설치 시 in-process 모드로 폴백합니다."
+- **macOS/Linux**: tmux 미설치 시 경고만 표시하고 계속 진행.
+
+Why: VS Code 터미널 및 native Windows에서는 in-process 모드로 폴백 가능하므로 tmux 없이도 기본 작동 가능.
 
 ### Setup-3: settings.local.json 핵심 설정 확인 + 자동 구성
 
@@ -321,7 +326,12 @@ Why: Agent Office는 tofu-at GitHub 리포에 포함. install.sh 한 줄로 전�
 | Agent Office | ✅ 설치됨 / ❌ 설치 실패 (수동 설치 안내) |
 | 모델 | {현재 모델} (권장: opus[1m]) |
 
-환경설정이 완료되었습니다. 이제 /tofu-at를 사용할 수 있습니다.
+환경설정이 완료되었습니다.
+
+> **중요**: 설정을 적용하려면 **`/resume`을 실행하거나 세션을 재시작**하세요.
+> 새로 설정된 환경변수(CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS)와 teammateMode는
+> 세션 재로드 후 활성화됩니다. 스킬/커맨드(/tofu-at 등)가 바로 인식되지 않으면
+> 반드시 /resume 후 다시 시도하세요.
 ```
 
 ### Setup 종료 분기
@@ -359,6 +369,27 @@ IF Agent Office 설치 실패:
 ## STEP 0.5: 환경 검증 (자동 - 사용자 표시 불필요)
 
 **모든 모드에서 자동 실행. 사용자에게 결과만 요약 표시.**
+
+### 0.5-SKIP: 검증 캐시 확인 (최초 1회 이후 스킵)
+
+```
+Glob(".team-os/.env-verified") 존재 확인:
+
+IF 존재:
+  Read(".team-os/.env-verified") → JSON 파싱
+  IF verified.session == current_tmux_session AND verified.agent_teams == true:
+    → "환경 검증 캐시 유효. 스킵합니다."
+    → env_profile = verified.env_profile  (캐시된 값 사용)
+    → STEP 1로 직접 진행
+  ELSE:
+    → 캐시 무효 (세션 불일치). 전체 검증 진행.
+
+ELSE:
+  → 캐시 없음. 전체 검증 진행.
+```
+
+캐시 무효 또는 미존재 시 → 아래 0.5-0부터 전체 실행.
+검증 완료 후 캐시 저장은 0.5-4 마지막에 수행합니다.
 
 ### 0.5-0. 모델 + 컨텍스트 확인
 
@@ -473,7 +504,8 @@ Agent Office 미설치 시 STEP 0-SETUP에서 install.sh로 설치 안내.
 AGENT_OFFICE_ROOT는 사용 시 항상 $(pwd)로 설정.
 
 **5단계: tmux 설치 확인** (env_tmux == false인 경우만)
-- wsl/linux → Bash("which tmux") 실행, 실패 시 설치 안내: "sudo apt install tmux"
+- windows → 스킵. "Windows에서는 tmux 없이 in-process 모드로 작동합니다. (WSL 사용 권장, 필수 아님)"
+- wsl/linux → Bash("which tmux") 실행, 실패 시 설치 안내: "sudo apt install tmux (권장, 필수 아님)"
 - macos → Bash("which tmux") 실행, 실패 시: "brew install tmux"
 - vscode → "VS Code 터미널은 Split Pane 미지원. in-process 모드로 자동 폴백."
 
@@ -526,6 +558,25 @@ Why: Agent Office 설치 시 bootstrap.js 활용으로 완전한 인프라 구�
 **4단계**: Glob(".team-os/hooks/*") → Hook 스크립트 존재 여부
 Glob(".team-os/artifacts/*") → 아티팩트 디렉토리 존재 여부
 
+**5단계 (NEW): 검증 캐시 저장** — 이후 재실행 시 0.5-SKIP에서 스킵 가능
+
+```
+tmux_session = Bash("tmux display-message -p '#S' 2>/dev/null || echo 'none'")
+
+Write(".team-os/.env-verified", JSON.stringify({
+  session: tmux_session,
+  agent_teams: true,
+  env_profile: {
+    env_platform: env_platform,
+    env_tmux: env_tmux,
+    env_vscode: env_vscode,
+    browser_cmd: browser_cmd,
+    agent_office_path: agent_office_path
+  },
+  verified_at: new Date().toISOString()
+}, null, 2))
+```
+
 ---
 
 ## STEP 1: 리소스 동적 탐색 (CRITICAL)
@@ -541,6 +592,23 @@ Glob(".team-os/artifacts/*") → 아티팩트 디렉토리 존재 여부
    - Glob(".claude/agents/*.md") → Agents 목록
    - Glob(".claude/commands/*.md") → Commands 목록
    - 각 파일의 frontmatter Read (첫 10줄)
+
+1-A2. Phase A-2: 기존 에이전트 재사용 후보 인벤토리 (NEW)
+   agent_inventory = []
+   FOR each agent in Glob(".claude/agents/*.md"):
+     # 비에이전트 파일 제외
+     IF filename starts with "README" OR "CHANGELOG" OR "BUGS" OR "NOTION":
+       SKIP
+     Read 첫 15줄 → frontmatter 추출: name, description, tools, model
+     keywords = name + description에서 키워드 추출 (소문자)
+     agent_inventory.append({ path, name, description, tools, keywords })
+
+   FOR each spawn in Glob(".team-os/spawn-prompts/*.md"):
+     Read 첫 5줄 → 역할명 추출
+     spawn_inventory.append({ path, name })
+
+   # 인벤토리 결과 요약 (내부 참조용, 사용자 미표시)
+   # STEP 3에서 자동 매칭에 사용됨
 
 2. Phase B: MCP 서버 스캔
    - Read(".mcp.json") → MCP 서버 목록
@@ -676,9 +744,57 @@ AskUserQuestion 호출 — questions 배열에 2개 질문:
 6. 모델+도구 할당
 ```
 
+### 3-A. 기존 에이전트 자동 매칭 (NEW)
+
+워크플로우 분석 후 에이전트 유닛 분해 단계에서, STEP 1 Phase A-2의 agent_inventory를 활용하여
+각 제안된 역할에 기존 에이전트 매칭을 시도합니다.
+
+```
+FOR each proposed_role:
+  best_match = null
+  best_score = 0
+
+  FOR each agent in agent_inventory:
+    score = 0
+    # 이름 매칭 (가중치 높음)
+    IF proposed_role.name contains agent.name OR agent.name contains proposed_role.name:
+      score += 0.5
+    # 설명 키워드 매칭
+    overlap = count(proposed_role.keywords ∩ agent.keywords) / max(len(proposed_role.keywords), 1)
+    score += overlap * 0.3
+    # 도구 매칭
+    tool_overlap = count(proposed_role.tools ∩ agent.tools) / max(len(proposed_role.tools), 1)
+    score += tool_overlap * 0.2
+
+    IF score > best_score:
+      best_score = score
+      best_match = agent
+
+  IF best_score >= 0.4:
+    proposed_role.suggested_source = best_match.path
+    proposed_role.match_confidence = best_score
+```
+
 ### 분석 결과 출력
 
 `tofu-at-workflow.md`의 "팀 구성안 생성 출력 포맷" 참조.
+
+분석 결과 테이블에 "기존 에이전트 매칭" 열을 추가합니다:
+
+```
+| 역할 | 에이전트명 | 모델 | 타입 | 핵심 도구 | 기존 에이전트 매칭 |
+|------|----------|------|------|----------|------------------|
+| writer | thread-writer | sonnet | GP | Read,Write | ✅ thread-writer.md (85%) |
+| researcher | vault-scanner | sonnet | Explore | Read,Glob | (생성) |
+```
+
+STEP 3의 AskUserQuestion에서 매칭된 에이전트 사용 여부를 함께 확인:
+- "확인" 선택 시 → 매칭된 에이전트 사용 확정 (suggested_source 유지)
+- "수정" 선택 시 → 개별 역할의 매칭을 변경 가능
+
+**워크플로우 위계 다이어그램 필수 포함**: 분석 결과에 반드시 "워크플로우 흐름" 섹션을 포함합니다.
+에이전트를 dependency layer별로 그루핑하여 Phase 테이블과 ASCII 다이어그램을 생성합니다.
+`tofu-at-workflow.md`의 "워크플로우 흐름 (Workflow Flow)" 섹션의 생성 알고리즘을 따릅니다.
 
 <!-- MANDATORY_INTERACTION: STEP 3 -->
 > ⛔ **STOP — 분석 결과 출력 후 반드시 AskUserQuestion을 호출하고 사용자 응답을 받으세요.**
@@ -737,6 +853,30 @@ AskUserQuestion 호출 — questions 배열에 1개 질문:
 
 ```
 FOR each role in registry.roles:
+
+  Step 5-0: Existing Agent Detection (NEW — tofu-at-spawn-templates.md §4.5 참조)
+    IF role.source_agent OR role.suggested_source (STEP 3에서 확인됨):
+      source_path = role.source_agent || role.suggested_source
+      original_content = Read(source_path)
+
+      # 래퍼 템플릿 적용 (Section 4.5)
+      spawn_prompt = compose_wrapper(
+        team_integration: {TEAM_NAME, ROLE_NAME, ROLE_TYPE, TEAM_MEMBERS, TOPIC},
+        original_content: original_content,  # 변형 없이 그대로
+        team_override: {파일쓰기제한, SendMessage필수, MCP정규화}
+      )
+
+      # CE 최소 검증만 수행 (전체 파이프라인 스킵)
+      [ ] 래퍼 + 원본 합산 토큰이 모델 컨텍스트의 10% 미만?
+      [ ] SendMessage 프로토콜 포함?
+      [ ] progress_update_rule 포함?
+
+      → role.spawn_prompt = spawn_prompt
+      → role.source_type = "existing"
+      → SKIP Steps 5-1 ~ 5-6
+      CONTINUE (다음 role로)
+
+  # source_type != "existing" → 기존 파이프라인
 
   Step 5-1: Purpose Detection
     role 키워드(name + description + tasks) → /prompt 목적 카테고리 매핑
@@ -815,9 +955,11 @@ FOR each role in registry.roles:
 {YAML 코드블록}
 
 ### 스폰 프롬프트 (요약)
-| 역할 | 에이전트명 | 모델 | 타입 | 핵심 도구 |
-|------|----------|------|------|----------|
+| 역할 | 에이전트명 | 모델 | 타입 | 핵심 도구 | 소스 |
+|------|----------|------|------|----------|------|
 ```
+
+> **소스 열 표기**: 기존 에이전트 래핑 시 `📄 기존 에이전트`, 템플릿 생성 시 `🔧 템플릿 생성`
 
 <!-- MANDATORY_INTERACTION: STEP 6 -->
 > ⛔ **STOP — 팀 템플릿 출력 후 반드시 AskUserQuestion을 호출하고 사용자 응답을 받으세요.**
@@ -876,10 +1018,16 @@ IF agent_office_path != null:
       Bash("lsof -ti:3747 | xargs kill -9 2>/dev/null || true")
     ELIF env_platform == "macos":
       Bash("lsof -ti:3747 | xargs kill -9 2>/dev/null || true")
+    ELIF env_platform == "windows":
+      Bash("for /f \"tokens=5\" %a in ('netstat -aon ^| findstr :3747 ^| findstr LISTENING') do taskkill /F /PID %a 2>nul || exit /b 0")
 
     # 3. 서버 시작 (항상 AGENT_OFFICE_ROOT 설정 — 모든 플랫폼에서 정확한 프로젝트 루트 보장)
     #    --open 플래그로 서버 시작 시 자동 브라우저 오픈
-    Bash("AGENT_OFFICE_ROOT=$(pwd) node {agent_office_path}/server.js --open", run_in_background: true)
+    IF env_platform == "windows":
+      # Windows: $(pwd) bash-ism 불가 → %CD% 또는 node로 직접 CWD 설정
+      Bash("set AGENT_OFFICE_ROOT=%CD%&& node {agent_office_path}/server.js --open", run_in_background: true)
+    ELSE:
+      Bash("AGENT_OFFICE_ROOT=$(pwd) node {agent_office_path}/server.js --open", run_in_background: true)
 
     # 4. 헬스체크 재시도 루프 (최대 10초 — sleep 2 대체)
     Bash("for i in 1 2 3 4 5 6 7 8 9 10; do
@@ -905,10 +1053,12 @@ IF agent_office_path != null:
   IF health == "200" AND 브라우저가 열리지 않은 경우:
     Bash("curl -s -X POST http://localhost:3747/api/open-browser --connect-timeout 2 || true")
 
-  # 6.2. WSL/tmux 환경 수동 접근 안내
+  # 6.2. 환경별 수동 접근 안내
   IF env_platform == "wsl":
     "tmux 세션에서 브라우저가 자동으로 열리지 않을 수 있습니다."
     "Windows 브라우저에서 직접 http://localhost:3747 을 열어주세요."
+  ELIF env_platform == "windows":
+    "브라우저가 자동으로 열리지 않으면 직접 http://localhost:3747 을 열어주세요."
 
 ELSE:
   "Agent Office 미설치. /tofu-at setup을 실행하여 설치해주세요.
@@ -957,6 +1107,12 @@ Write(".team-os/artifacts/TEAM_PLAN.md"):
   | # | Step | Assignee | Dependency | Status |
   |---|------|----------|------------|--------|
   {steps 테이블 - 파서가 row[0]=id, row[1]=step, row[2]=assignee, row[3]=dependency, row[4]=status 기대}
+
+  ## Workflow Flow
+
+  | Phase | Agents | Mode | Input | Output |
+  |-------|--------|------|-------|--------|
+  {phase 테이블 - STEP 3 분석의 dependency layer에서 생성. 파서가 row[0]=phase, row[1]=agents, row[2]=mode, row[3]=input, row[4]=output 기대}
 
   ## Quality Targets
 
@@ -1083,6 +1239,26 @@ Task(
 # ... 필요한 만큼 추가
 ```
 
+### 7-4-0.3. 스폰 프롬프트 파일 저장 (Results 연동)
+
+**모든 Task 스폰 직후, 각 워커의 스폰 프롬프트를 파일로 보존합니다.**
+**Results 탭에서 각 에이전트에게 전달된 정확한 프롬프트를 확인할 수 있습니다.**
+
+```
+# .team-os/spawn-prompts/ 디렉토리는 STEP 0.5-4에서 이미 생성됨
+
+FOR each spawned_role:
+  Write(".team-os/spawn-prompts/{role_name}.md", spawn_prompt_text)
+  # spawn_prompt_text = Task()에 전달한 prompt 파라미터 값 (변수 치환 완료 상태)
+
+# DA 스폰 프롬프트도 저장 (DA 활성화 시)
+IF devil_advocate.enabled:
+  Write(".team-os/spawn-prompts/devils-advocate.md", da_spawn_prompt_text)
+```
+
+Why: spawn-prompts 파일은 report JSON의 spawnPrompts 필드에 포함되어 Agent Office Results에서 조회 가능.
+디버깅 시에도 `.team-os/spawn-prompts/` 폴더를 직접 참조할 수 있음.
+
 ### 7-4-0.5. 워커 프롬프트 progress_update_rule (CRITICAL)
 
 **모든 워커 스폰 프롬프트에 아래 `<progress_update_rule>` 블록을 반드시 포함합니다.**
@@ -1091,13 +1267,19 @@ Task(
 워커 프롬프트 내 삽입 블록:
 ```xml
 <progress_update_rule>
-진행 상황 변경 시 대시보드에 즉시 보고:
-Bash("curl -s -X POST http://localhost:3747/api/progress \
-  -H 'Content-Type: application/json' \
-  -d '{\"agent\":\"{name}\",\"progress\":{pct},\"task\":\"{task}\",\"note\":\"{note}\"}' \
+진행 상황 변경 시 대시보드에 즉시 보고.
+한국어/유니코드 인코딩 안전을 위해 Write 도구로 임시 파일 생성 후 curl -d @file 전송:
+
+1) Write("/tmp/.tofu-at-progress.json") 호출:
+   내용: {"agent":"{name}","progress":{pct},"task":"{task}","note":"{note}"}
+
+2) Bash("curl -s -X POST http://localhost:3747/api/progress \
+  -H 'Content-Type: application/json; charset=utf-8' \
+  -d @/tmp/.tofu-at-progress.json \
   --connect-timeout 2 || true")
 
-타이밍: 시작(10%) → 단계별(20,40,60) → 전송(80) → 완료(100)
+타이밍: 시작(10%, 작업중) → 진행(20-80%, 작업중) → 완료(100%, Done)
+대시보드 표시: 0%=Waiting(노랑) | 1-99%=작업중(초록) | 100%=Done(파랑)
 curl 실패 시 무시 (대시보드 미실행 시 정상)
 </progress_update_rule>
 ```
@@ -1152,14 +1334,70 @@ SendMessage 응답에 포함:
   )
 ```
 
+### 7-4-1.5. 메시지 로그 초기화 (Results 연동)
+
+**모든 스폰 완료 직후, 에이전트 간 대화 로그 수집을 시작합니다.**
+**Results 탭에서 에이전트 간 전체 메시지 흐름을 시간순으로 확인할 수 있습니다.**
+
+```
+# 메시지 로그 배열 초기화
+message_log = []
+
+# === 로깅 규칙 (STEP 7-5 ~ 7-7 전체에 적용) ===
+#
+# 모든 SendMessage 호출 직후, message_log에 항목을 추가합니다:
+#
+#   message_log.append({
+#     "timestamp": "{ISO_timestamp}",
+#     "from": "{sender}",        # "lead", "{worker_name}", "devils-advocate"
+#     "to": "{recipient}",       # "{worker_name}", "devils-advocate", "all"
+#     "type": "{message_type}",  # 아래 테이블 참조
+#     "summary": "{summary 필드값 또는 요약 1줄}"
+#   })
+#
+# === 로깅 대상 메시지 유형 ===
+#
+# | 위치 | from → to | type |
+# |------|----------|------|
+# | 7-5.5 | lead → worker | health_check |
+# | 7-6 (Ralph) | lead → DA | da_review_request |
+# | 7-6 (Ralph) | lead → worker | ralph_verdict |
+# | 7-6 (non-Ralph) | lead → DA | da_review_request |
+# | 7-6 (non-Ralph) | lead → worker | awaiting_da |
+# | 7-6.5 | lead → DA | da_comprehensive_review |
+# | 7-6.5 | lead → worker | da_rework |
+# | 7-6.5 | lead → DA | da_re_review |
+# | 7-7 | lead → all | shutdown_request |
+# | 수신 | worker → lead | result |
+# | 수신 | DA → lead | da_review |
+#
+# === 수신 메시지 로깅 ===
+#
+# 워커 결과 수신 시:
+#   message_log.append({
+#     "timestamp": "{ISO}", "from": "{worker_name}", "to": "lead",
+#     "type": "result", "summary": "{결과 요약 1줄}"
+#   })
+#
+# DA 리뷰 응답 수신 시:
+#   message_log.append({
+#     "timestamp": "{ISO}", "from": "devils-advocate", "to": "lead",
+#     "type": "da_review", "summary": "{recommendation}: {요약}"
+#   })
+```
+
+Why: message_log는 report JSON의 messageLog 필드에 포함되어 Agent Office Results에서 시간순 테이블로 표시됨.
+TEAM_BULLETIN.md는 이벤트(milestone)만 기록하지만, message_log는 에이전트 간 실제 대화 흐름을 기록.
+
 ### 7-4-2. 진행 상태 초기 업데이트 (대시보드 연동)
 
 **모든 Task 스폰 직후, 대시보드에 실행 상태를 반영합니다.**
 
-> **진행률 갱신 규칙 (8레벨 스케일 — CRITICAL for Agent Office 실시간 반영)**:
-> - General 워커: 5%(spawned) → 10%(assigned) → 20%(first_message) → 30-70%(active, 메시지 비례) → 80%(results_sent) → 90%(ralph_waiting) → 95%(shutdown) → 100%(team_deleted)
-> - Explore 워커: 10%(spawned) → 25→50→75%(active) → 80%(results_sent) → 95%(shutdown) → 100%(team_deleted)
-> - Done(100%)은 TeamDelete 후에만 표시. 80-99%는 "Wrapping up"으로 표시.
+> **진행률 갱신 규칙 (3-State 표시 + 8레벨 내부 추적 — CRITICAL for Agent Office 실시간 반영)**:
+> - **대시보드 상태 표시**: Waiting(0%, 노랑) → 작업중(1-99%, 초록) → Done(100%, 파랑)
+> - General 워커 내부 추적: 5%(spawned) → 10%(assigned) → 20%(first_message) → 30-70%(active) → 80%(results_sent) → 90%(ralph_waiting) → 95%(shutdown) → 100%(team_deleted)
+> - Explore 워커 내부 추적: 10%(spawned) → 25→50→75%(active) → 80%(results_sent) → 95%(shutdown) → 100%(team_deleted)
+> - Done(100%)은 DA ACCEPTABLE 판정 시 (또는 DA 비활성 시 전체 완료 후) 즉시 표시. TeamDelete는 리소스 정리용이며 Done 표시와 무관
 > - 최소 2분마다 1회 갱신 (Agent Office 15초 폴링 + SSE로 실시간 반영)
 > - 워커 프롬프트에 `<progress_update_rule>` 포함됨
 
@@ -1264,7 +1502,8 @@ IF ralph_loop.enabled == true:
         SendMessage(recipient: {worker_name}, content: "SHIP 판정. DA 종합 리뷰 대기 중입니다. 대기해 주세요.", summary: "SHIP - awaiting DA review")
 
         # curl API progress push
-        Bash("curl -s -X POST http://localhost:3747/api/progress -H 'Content-Type: application/json' -d '{\"agent\":\"{worker_name}\",\"progress\":80,\"task\":\"SHIP - DA 리뷰 대기\",\"note\":\"awaiting DA comprehensive review\"}' --connect-timeout 2 || true")
+        Write("/tmp/.tofu-at-progress.json", '{"agent":"{worker_name}","progress":80,"task":"SHIP - DA review pending","note":"awaiting DA comprehensive review"}')
+        Bash("curl -s -X POST http://localhost:3747/api/progress -H 'Content-Type: application/json; charset=utf-8' -d @/tmp/.tofu-at-progress.json --connect-timeout 2 || true")
 
         TEAM_BULLETIN.md에 Append:
           ## [{timestamp}] - {worker_name}
@@ -1347,7 +1586,8 @@ ELSE:
     SendMessage(recipient: {worker_name}, content: "DA 종합 리뷰 대기 중입니다. 대기해 주세요.", summary: "awaiting DA review")
 
     # curl API progress push
-    Bash("curl -s -X POST http://localhost:3747/api/progress -H 'Content-Type: application/json' -d '{\"agent\":\"{worker_name}\",\"progress\":80,\"task\":\"DA 리뷰 대기\",\"note\":\"awaiting DA comprehensive review\"}' --connect-timeout 2 || true")
+    Write("/tmp/.tofu-at-progress.json", '{"agent":"{worker_name}","progress":80,"task":"DA review pending","note":"awaiting DA comprehensive review"}')
+    Bash("curl -s -X POST http://localhost:3747/api/progress -H 'Content-Type: application/json; charset=utf-8' -d @/tmp/.tofu-at-progress.json --connect-timeout 2 || true")
 
     TEAM_BULLETIN.md에 Append:
       ## [{timestamp}] - {worker_name}
@@ -1385,8 +1625,20 @@ IF devil_advocate.enabled == true:
     summary: "DA comprehensive review request"
   )
 
-  # 2. DA 응답 수신
-  da_review = DA 메시지 자동 수신
+  # 2. DA 응답 수신 (타임아웃 2분)
+  da_timeout_reached = false
+  da_review = DA 메시지 자동 수신 (최대 2분 대기)
+
+  # 2-1. 타임아웃 처리 (NEW — Bug 3 수정)
+  IF DA 응답 2분 내 미수신:
+    → 경고: "DA 종합 리뷰 타임아웃 (2분). 현재 결과로 진행합니다."
+    da_timeout_reached = true
+    FOR each worker:
+      TEAM_PROGRESS.md: Progress → 100%, Note → completed (DA timeout)
+      Write("/tmp/.tofu-at-progress.json", '{"agent":"{worker_name}","progress":100,"task":"completed","note":"DA timeout - proceeded without review"}')
+      Bash("curl -s -X POST http://localhost:3747/api/progress -H 'Content-Type: application/json; charset=utf-8' -d @/tmp/.tofu-at-progress.json --connect-timeout 2 || true")
+    → STEP 7-7 셧다운 진행
+
   da_iteration = 0
 
   # 3. DA 판정 처리
@@ -1394,7 +1646,10 @@ IF devil_advocate.enabled == true:
     # 모든 워커 100%로 업데이트
     FOR each worker:
       TEAM_PROGRESS.md: Progress → 100%, Note → completed (DA ACCEPTABLE)
-      Bash("curl -s -X POST http://localhost:3747/api/progress -H 'Content-Type: application/json' -d '{\"agent\":\"{worker_name}\",\"progress\":100,\"task\":\"completed\",\"note\":\"DA ACCEPTABLE\"}' --connect-timeout 2 || true")
+      Write("/tmp/.tofu-at-progress.json", '{"agent":"{worker_name}","progress":100,"task":"completed","note":"DA ACCEPTABLE"}')
+      result = Bash("curl -s -o /dev/null -w '%{http_code}' -X POST http://localhost:3747/api/progress -H 'Content-Type: application/json; charset=utf-8' -d @/tmp/.tofu-at-progress.json --connect-timeout 2 || echo 'fail'")
+      IF result != "200":
+        Bash("curl -s -X POST http://localhost:3747/api/progress/done --connect-timeout 2 || true")
 
     # → STEP 7-7 셧다운 진행
 
@@ -1414,7 +1669,8 @@ IF devil_advocate.enabled == true:
 
         # 워커 progress 50%로 다운그레이드
         TEAM_PROGRESS.md: Progress → 50%, Note → DA rework #{da_iteration}
-        Bash("curl -s -X POST http://localhost:3747/api/progress -H 'Content-Type: application/json' -d '{\"agent\":\"{rework_worker}\",\"progress\":50,\"task\":\"DA rework\",\"note\":\"iteration #{da_iteration}\"}' --connect-timeout 2 || true")
+        Write("/tmp/.tofu-at-progress.json", '{"agent":"{rework_worker}","progress":50,"task":"DA rework","note":"iteration #{da_iteration}"}')
+        Bash("curl -s -X POST http://localhost:3747/api/progress -H 'Content-Type: application/json; charset=utf-8' -d @/tmp/.tofu-at-progress.json --connect-timeout 2 || true")
 
       # 수정 결과 재수신
       FOR each rework_worker:
@@ -1446,7 +1702,8 @@ ELSE:
   # DA 비활성화 시: 기존 로직대로 즉시 100%
   FOR each worker:
     TEAM_PROGRESS.md: Progress → 100%, Note → completed
-    Bash("curl -s -X POST http://localhost:3747/api/progress -H 'Content-Type: application/json' -d '{\"agent\":\"{worker_name}\",\"progress\":100,\"task\":\"completed\",\"note\":\"no DA\"}' --connect-timeout 2 || true")
+    Write("/tmp/.tofu-at-progress.json", '{"agent":"{worker_name}","progress":100,"task":"completed","note":"no DA"}')
+    Bash("curl -s -X POST http://localhost:3747/api/progress -H 'Content-Type: application/json; charset=utf-8' -d @/tmp/.tofu-at-progress.json --connect-timeout 2 || true")
 ```
 
 **Ralph + DA 통합 흐름:**
@@ -1463,6 +1720,7 @@ PRECONDITION (셧다운 전제 조건 — DA 활성화 시):
   devil_advocate.enabled == false
   OR da_review.recommendation == "ACCEPTABLE"
   OR da_iteration >= 3
+  OR da_timeout_reached == true   # NEW: DA 2분 타임아웃 폴백 (Bug 3 수정)
 
 # DA 미승인 시 셧다운 불가 — STEP 7-6.5 완료 후에만 진행
 
@@ -1473,28 +1731,65 @@ PRECONDITION (셧다운 전제 조건 — DA 활성화 시):
    IF devil_advocate.enabled:
      SendMessage({ type: "shutdown_request", recipient: "devils-advocate", content: "작업 완료" })
 
-2. shutdown_response 대기 (최대 10초):
+2. shutdown_response 대기 (최대 3초):
    각 팀원의 shutdown_response를 대기.
-   10초 내 응답 없는 팀원은 아래 3번에서 강제 정리.
+   3초 내 응답 없는 팀원은 아래 3번에서 강제 정리.
+   (10초→3초 단축: 대부분의 팀원은 즉시 응답하거나 응답 불가.
+    길게 대기해도 CC "scurrying" 시간만 증가.)
 
-3. 잔류 tmux pane 강제 정리 (CRITICAL — scurrying 방지):
+3. 잔류 에이전트 강제 정리 (CRITICAL — scurrying 방지):
    # 팀원이 shutdown에 응답하지 않거나 이미 종료된 경우,
-   # tmux pane이 orphan으로 남아 CC가 "scurrying" 상태를 유지할 수 있음.
-   # config.json에서 tmuxPaneId를 읽어 강제 종료:
+   # orphan 프로세스/pane이 남아 CC가 "scurrying" 상태를 유지할 수 있음.
+   # 플랫폼에 따라 정리 방법을 분기:
    FOR each member in team_config.members (리드 제외):
-     IF member.tmuxPaneId:
+     IF env_platform == "windows":
+       # Windows: tmux 없음. isActive 플래그 강제 설정으로 TeamDelete 허용.
+       # CC 내장 에이전트 종료 메커니즘에 의존 (shutdown_request가 이미 전송됨).
+       PASS  # tmux kill-pane 스킵
+     ELIF member.tmuxPaneId:
        Bash("tmux kill-pane -t {member.tmuxPaneId} 2>/dev/null || true")
+     # tmuxPaneId 없는 경우 (in-process 모드): CC 자체 정리에 의존
 
    # config.json에서 isActive: false 미설정 멤버 수동 보정:
-   # (TeamDelete가 active 멤버 있으면 거부하므로)
+   # (TeamDelete가 active 멤버 있으면 거부하므로) — 모든 플랫폼 공통
    FOR each member in team_config.members (리드 제외):
      IF member.isActive != false:
        config.json에서 해당 member의 isActive = false 설정
 
-4. TeamDelete()
+4. Results 보고서 자동 전송 (MANDATORY — TeamDelete 전에 실행!):
+   # TeamDelete 후에는 team config가 삭제되어 정보 수집 불가.
+   # 반드시 TeamDelete 전에 Results를 전송합니다.
 
-4.1. Results 보고서 자동 전송 (MANDATORY — TeamDelete 직후):
-   # STEP 8-1 로직을 여기서 즉시 실행 (별도 섹션 대기 없이)
+   # 4a. da_review 필드 기본값 보장 (undefined 방지 — Bug 5 수정)
+   IF da_review == undefined OR da_timeout_reached == true:
+     report.da_review = {
+       "enabled": devil_advocate.enabled,
+       "recommendation": "N/A",
+       "note": da_timeout_reached ? "DA did not respond (timeout)" : "DA not active"
+     }
+
+   # 4b. spawnPrompts 수집 (.team-os/spawn-prompts/ 파일에서)
+   spawnPrompts = []
+   spawn_files = Glob(".team-os/spawn-prompts/*.md")
+   IF spawn_files is empty:
+     # spawn-prompts 파일 없음: graceful degradation (Results에 Prompts 탭 미표시)
+     TEAM_BULLETIN.md에 Append: "Note: spawn-prompts 파일 없음. Results Spawn Prompts 탭이 비어있을 수 있습니다."
+   ELSE:
+     FOR each file in spawn_files:
+       content = Read(file)
+       IF content is empty:
+         CONTINUE  # 빈 파일 건너뛰기
+       agent_name = file에서 파일명 추출 (확장자 제거)
+       # team 배열에서 해당 에이전트의 role, model 조회
+       member = team 배열에서 name == agent_name인 항목
+       spawnPrompts.append({
+         "agent": agent_name,
+         "role": member.role || "Worker",
+         "model": member.model || "unknown",
+         "prompt": content
+       })
+
+   # 4c. report JSON 구성
    report = {
      "id": "{timestamp}-{team_name}",
      "timestamp": "{ISO 8601}",
@@ -1508,21 +1803,37 @@ PRECONDITION (셧다운 전제 조건 — DA 활성화 시):
      "checkpoints": [각 checkpoint의 { name, done }],
      "bulletin": [{최근 bulletin 항목들}],
      "results": { "summary": "...", "details": "...", "artifacts": [...] },
-     "ralph": { "enabled": ..., "iterations": {...}, "verdict": "..." }
+     "ralph": { "enabled": ..., "iterations": {...}, "verdict": "..." },
+     "da_review": report.da_review || { "enabled": false },
+     "spawnPrompts": spawnPrompts,
+     "messageLog": message_log
    }
 
-   # Primary: Agent Office 서버로 POST
-   Bash("curl -s -X POST http://localhost:3747/api/reports -H 'Content-Type: application/json' -d '{report JSON}'")
+   # 4d. JSON 파일로 저장 후 curl 전송 (escape 문제 방지 — Bug 5 수정)
+   Bash("mkdir -p .team-os/reports")
+   Write(".team-os/reports/_pending.json", JSON.stringify(report, null, 2))
 
-   # Fallback: curl 실패 시 파일로 직접 저장
-   IF curl 실패 (exit code != 0 또는 HTTP != 200/201):
-     Bash("mkdir -p .team-os/reports")
-     Write(".team-os/reports/{report.id}.json", JSON.stringify(report, null, 2))
+   # 4d-1. JSON 유효성 검증 (Windows 인코딩 깨짐 대비)
+   validation = Bash("node -e \"try{JSON.parse(require('fs').readFileSync('.team-os/reports/_pending.json','utf-8'));console.log('valid')}catch(e){console.log('invalid')}\" 2>/dev/null || echo 'invalid'")
+   IF validation starts with "invalid":
+     # JSON 깨짐 감지 시 재생성 시도 (한국어 제외 영어 필드만 포함)
+     Write(".team-os/reports/_pending.json", JSON.stringify(report, null, 2))
+
+   result = Bash("curl -s -o /dev/null -w '%{http_code}' -X POST http://localhost:3747/api/reports -H 'Content-Type: application/json; charset=utf-8' -d @.team-os/reports/_pending.json --connect-timeout 5 || echo 'fail'")
+
+   # 4e. 전송 결과 확인
+   IF result == "200" OR result == "201":
+     Bash("rm .team-os/reports/_pending.json 2>/dev/null || true")
+   ELSE:
+     # 파일이 이미 저장되어 있으므로 rename (fallback 보존)
+     Bash("mv .team-os/reports/_pending.json .team-os/reports/{report.id}.json 2>/dev/null || true")
 
    # 성공 여부와 무관하게 다음 단계로 진행
 
-5. 대시보드 아티팩트 정리:
-   Bash("curl -s -X POST http://localhost:3747/api/session/clear")
+5. TeamDelete()
+
+6. 대시보드 아티팩트 정리:
+   Bash("curl -s -X POST http://localhost:3747/api/session/clear --connect-timeout 2 || true")
    → .team-os/artifacts/TEAM_*.md 삭제 (MEMORY.md 유지)
    → 대시보드가 stale 팀 데이터 표시하지 않도록 방지
    → 실패해도 무시 (Agent Office 미실행 시)

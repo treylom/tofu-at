@@ -393,8 +393,49 @@ outline.md defaults.routing_policy 기반:
 | Cat. Lead | lead-{category} | sonnet | general-purpose | 카테고리 조율 | 도메인 도구 |
 | Worker | {name} | sonnet/haiku | general-purpose/Explore | {유닛} | {도구} |
 
-### 데이터 흐름
-{유닛 간 입출력 의존성 다이어그램}
+### 워크플로우 흐름 (Workflow Flow)
+
+**Phase 테이블** — 에이전트를 dependency layer별로 그루핑하여 워크플로우 위계를 표시합니다:
+
+| Phase | Agents | Mode | Input | Output |
+|-------|--------|------|-------|--------|
+| 1. {phase_name} | {agent_1}, {agent_2} | parallel/sequential | {입력} | {출력} |
+| 2. {phase_name} | {agent_3} | sequential | {입력} | {출력} |
+
+**생성 알고리즘**:
+1. STEP 3의 에이전트 유닛 분해 결과에서 dependency(blockedBy) 관계 추출
+2. 의존성 없는 워커 에이전트 = Phase 1 (병렬 실행 가능)
+3. Phase 1 결과에 의존하는 에이전트 = Phase 2
+4. 이후 같은 패턴으로 Phase N까지 반복 (topological sort)
+5. 같은 Phase 내 에이전트가 2개 이상이면 Mode = "parallel"
+6. DA는 마지막 워커 Phase 다음에 배치 (검증 역할 — 모든 Phase 결과를 리뷰)
+7. Lead는 최종 레이어에 배치 (모든 결과 수렴 — DA 검증 후 최종 통합)
+8. DA/Lead는 모든 Phase와 상호작용 가능 (oversight 관계 — 화살표 표시 시 간결하게)
+
+**ASCII 워크플로우 다이어그램** — Phase별 에이전트를 좌→우로 배치:
+```
+Phase 1: {name}           Phase 2: {name}            Phase 3: {name}
+┌─────────────────┐      ┌──────────────────┐       ┌──────────────┐
+│ {agent_1}       │─┐    │ {agent_3}        │─┐     │ {agent_5}    │
+│ {agent_2}       │─┤──> │ {agent_4}        │─┤──>  │              │
+└─────────────────┘      └──────────────────┘       └──────────────┘
+      (parallel)               (parallel)              (sequential)
+```
+
+**예시** — 뉴스레터 제작 워크플로우:
+```
+Phase 1: 자료조사          Phase 2: 제작              Phase 3: 검증       Phase 4: 통합
+┌─────────────────┐      ┌──────────────────┐       ┌──────────┐       ┌──────────┐
+│ researcher-1    │─┐    │ video-team-lead  │─┐     │ DA       │       │ Lead     │
+│ researcher-2    │─┤──> │ audio-team-lead  │─┤──>  │          │──>    │          │
+└─────────────────┘      └──────────────────┘       └──────────┘       └──────────┘
+      (parallel)               (parallel)           (검증·반론)        (최종 통합)
+                                                   ← 모든 Phase 감독 →
+```
+
+> DA는 모든 워커 Phase 결과를 리뷰하고 반론을 제기합니다.
+> Lead는 DA 검증 후 최종 결과를 통합합니다.
+> DA/Lead의 감독(oversight) 관계는 Agent Office 대시보드에서 점선 화살표로 표시됩니다.
 
 ### 환경 요구사항
 | 항목 | 상태 |
