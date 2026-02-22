@@ -36,6 +36,23 @@ function broadcast(type, data) {
 let _nativeSuppressed = false;
 
 // --- API ---
+function mergeProgressOverlay(km) {
+  if (!km?.progress?.agents || Object.keys(_progressOverlay).length === 0) return km;
+  const now = Date.now();
+  for (const agent of km.progress.agents) {
+    const cleanName = (agent.agent || '').replace(/^@/, '');
+    const overlay = _progressOverlay[cleanName] || _progressOverlay[`@${cleanName}`];
+    if (overlay && (now - overlay.ts) < 600000) { // 10-minute TTL
+      // Overlay always wins (explicit API push is authoritative over inferred data)
+      agent.progress = overlay.progress;
+      if (overlay.task) agent.task = overlay.task;
+      if (overlay.note) agent.note = overlay.note;
+      agent.updated = new Date(overlay.ts).toISOString();
+    }
+  }
+  return km;
+}
+
 function getFullStatus() {
   return {
     project: PROJECT_ROOT,
@@ -44,7 +61,7 @@ function getFullStatus() {
     commands: getCommands(),
     mcpServers: getMCPServers(),
     teamOS: getTeamOSStatus(),
-    kmWorkflow: getKMWorkflow({ suppressNative: _nativeSuppressed }),
+    kmWorkflow: mergeProgressOverlay(getKMWorkflow({ suppressNative: _nativeSuppressed })),
     settings: getSettings(),
     timestamp: new Date().toISOString(),
   };
@@ -57,7 +74,7 @@ app.get('/api/commands', (_req, res) => res.json(getCommands()));
 app.get('/api/mcp', (_req, res) => res.json(getMCPServers()));
 app.get('/api/team-os', (_req, res) => res.json(getTeamOSStatus()));
 app.get('/api/km-workflow', (_req, res) => {
-  res.json(getKMWorkflow({ suppressNative: _nativeSuppressed }));
+  res.json(mergeProgressOverlay(getKMWorkflow({ suppressNative: _nativeSuppressed })));
 });
 
 // --- Native Team APIs ---
@@ -137,6 +154,18 @@ app.post('/api/progress', (req, res) => {
 
 app.get('/api/progress/overlay', (_req, res) => {
   res.json(_progressOverlay);
+});
+
+// Batch: set all agents to Done (100%)
+app.post('/api/progress/done', (_req, res) => {
+  for (const key of Object.keys(_progressOverlay)) {
+    _progressOverlay[key].progress = 100;
+    _progressOverlay[key].task = 'completed';
+    _progressOverlay[key].note = 'all done';
+    _progressOverlay[key].ts = Date.now();
+  }
+  broadcast('progress_push', { batch: true, allDone: true });
+  res.json({ success: true, count: Object.keys(_progressOverlay).length });
 });
 
 // --- Browser Recovery API ---

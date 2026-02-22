@@ -89,7 +89,10 @@ function discoverTeams() {
       if (!safeExists(configPath)) continue;
 
       try {
-        const config = JSON.parse(fs.readFileSync(configPath, 'utf-8'));
+        const raw = fs.readFileSync(configPath, 'utf-8');
+        if (!raw || raw.trim().length < 5) continue; // Skip empty/corrupt config
+        const config = JSON.parse(raw);
+        if (!config || !config.members || config.members.length === 0) continue; // Skip teams with no members
         const stat = fs.statSync(configPath);
 
         teams.push({

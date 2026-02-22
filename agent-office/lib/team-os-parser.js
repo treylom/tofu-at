@@ -59,16 +59,18 @@ function getKMWorkflow(options = {}) {
     memory: parseMemory(),
   };
 
-  // If session was cleared, skip native data until new activity
-  if (options.suppressNative) {
-    return { plan: null, progress: null, bulletin: null, findings: null, memory: artifacts.memory, liveTeam: null };
-  }
-
   // Native-First: merge with live team data from ~/.claude/teams/
   try {
     const { discoverTeamsCached, getTeamDetail } = require('./team-discovery');
     const { synthesize } = require('./data-synthesizer');
     const teams = discoverTeamsCached();
+
+    // If session was cleared but active teams exist, auto-unsuppress
+    // (native team data should always be available for live monitoring)
+    if (options.suppressNative && teams.length === 0) {
+      return { plan: null, progress: null, bulletin: null, findings: null, memory: artifacts.memory, liveTeam: null };
+    }
+
     const activeTeam = teams.length > 0 ? getTeamDetail(teams[0].name) : null;
     return synthesize(activeTeam, artifacts);
   } catch (err) {
@@ -89,6 +91,7 @@ function parseTeamPlan() {
   const teamResult = parseMarkdownTable(content, '## Team', { withHeaders: true });
   const stepsResult = parseMarkdownTable(content, '## Steps', { withHeaders: true });
   const hierarchyResult = parseMarkdownTable(content, '## Hierarchy', { withHeaders: true });
+  const workflowResult = parseMarkdownTable(content, '## Workflow Flow', { withHeaders: true });
 
   // Header-based dynamic column mapping for Team table
   const th = teamResult.headers;
@@ -131,6 +134,21 @@ function parseTeamPlan() {
       parent: (hParentIdx >= 0 ? row[hParentIdx] : row[0]) || '',
       children: (hChildrenIdx >= 0 ? row[hChildrenIdx] : row[1]) || '',
     })).filter(r => r.parent),
+    workflowPhases: (() => {
+      const wh = workflowResult.headers;
+      const wPhaseIdx = wh.findIndex(h => /phase/i.test(h));
+      const wAgentsIdx = wh.findIndex(h => /agent/i.test(h));
+      const wModeIdx = wh.findIndex(h => /mode/i.test(h));
+      const wInputIdx = wh.findIndex(h => /input/i.test(h));
+      const wOutputIdx = wh.findIndex(h => /output/i.test(h));
+      return workflowResult.rows.map(row => ({
+        phase: (wPhaseIdx >= 0 ? row[wPhaseIdx] : row[0]) || '',
+        agents: (wAgentsIdx >= 0 ? row[wAgentsIdx] : row[1]) || '',
+        mode: (wModeIdx >= 0 ? row[wModeIdx] : row[2]) || '',
+        input: (wInputIdx >= 0 ? row[wInputIdx] : row[3]) || '',
+        output: (wOutputIdx >= 0 ? row[wOutputIdx] : row[4]) || '',
+      })).filter(r => r.phase);
+    })(),
   };
 }
 

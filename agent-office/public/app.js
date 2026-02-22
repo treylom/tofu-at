@@ -1,9 +1,38 @@
-// === Agent Office v3.2 — Mission Control + Node Graph + Pixel Office + Interactive ===
+// === Agent Office v3.3 — Mission Control + Node Graph + Pixel Office + Interactive ===
 
 // --- State ---
 let bulletinData = [];
 let lastKmWorkflow = null;
 let currentMode = 'dashboard'; // 'dashboard' | 'pixel' | 'results'
+
+// --- Theme Selector (Classic / Tofu) ---
+function setTheme(themeName) {
+  const html = document.documentElement;
+  if (themeName === 'tofu') {
+    html.classList.add('theme-tofu');
+  } else {
+    html.classList.remove('theme-tofu');
+  }
+  localStorage.setItem('agent-office-theme', themeName);
+  // Update button active states
+  document.querySelectorAll('.theme-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.theme === themeName);
+  });
+  if (lastKmWorkflow) renderNodeGraph(lastKmWorkflow);
+}
+(function initTheme() {
+  const saved = localStorage.getItem('agent-office-theme');
+  if (saved === 'tofu') {
+    document.documentElement.classList.add('theme-tofu');
+  }
+  // Set active button on load
+  document.addEventListener('DOMContentLoaded', () => {
+    const active = saved || 'classic';
+    document.querySelectorAll('.theme-btn').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.theme === active);
+    });
+  });
+})();
 
 // === Agent Icon Generation ===
 
@@ -29,9 +58,9 @@ function generateAgentIcon(name, size) {
 
   let shapeSvg = '';
   if (shapeIdx === 0) {
-    shapeSvg = `<circle cx="${half}" cy="${half}" r="${half - 2}" fill="${color}" fill-opacity="0.2" stroke="${color}" stroke-width="1.5"/>`;
+    shapeSvg = `<circle cx="${half}" cy="${half}" r="${half - 2}" fill="${color}" fill-opacity="${document.documentElement.classList.contains('theme-tofu') ? 0.35 : 0.2}" stroke="${color}" stroke-width="1.5"/>`;
   } else if (shapeIdx === 1) {
-    shapeSvg = `<polygon points="${half},2 ${size - 2},${half} ${half},${size - 2} 2,${half}" fill="${color}" fill-opacity="0.2" stroke="${color}" stroke-width="1.5"/>`;
+    shapeSvg = `<polygon points="${half},2 ${size - 2},${half} ${half},${size - 2} 2,${half}" fill="${color}" fill-opacity="${document.documentElement.classList.contains('theme-tofu') ? 0.35 : 0.2}" stroke="${color}" stroke-width="1.5"/>`;
   } else if (shapeIdx === 2) {
     const r = half - 2;
     const pts = [];
@@ -39,9 +68,9 @@ function generateAgentIcon(name, size) {
       const a = Math.PI / 3 * i - Math.PI / 2;
       pts.push(`${half + r * Math.cos(a)},${half + r * Math.sin(a)}`);
     }
-    shapeSvg = `<polygon points="${pts.join(' ')}" fill="${color}" fill-opacity="0.2" stroke="${color}" stroke-width="1.5"/>`;
+    shapeSvg = `<polygon points="${pts.join(' ')}" fill="${color}" fill-opacity="${document.documentElement.classList.contains('theme-tofu') ? 0.35 : 0.2}" stroke="${color}" stroke-width="1.5"/>`;
   } else {
-    shapeSvg = `<rect x="2" y="2" width="${size - 4}" height="${size - 4}" rx="4" fill="${color}" fill-opacity="0.2" stroke="${color}" stroke-width="1.5"/>`;
+    shapeSvg = `<rect x="2" y="2" width="${size - 4}" height="${size - 4}" rx="4" fill="${color}" fill-opacity="${document.documentElement.classList.contains('theme-tofu') ? 0.35 : 0.2}" stroke="${color}" stroke-width="1.5"/>`;
   }
 
   return `<svg viewBox="0 0 ${size} ${size}" width="${size}" height="${size}" xmlns="http://www.w3.org/2000/svg">${shapeSvg}<text x="${half}" y="${half + fontSize * 0.35}" text-anchor="middle" fill="${color}" font-size="${fontSize}" font-weight="700" font-family="'Noto Sans KR', monospace">${initials}</text></svg>`;
@@ -59,10 +88,10 @@ function generateAgentIconSVGElements(name, x, y, size) {
 
   let shape = '';
   if (shapeIdx === 0) {
-    shape = `<circle cx="${cx}" cy="${cy}" r="${size / 2 - 2}" fill="${color}" fill-opacity="0.2" stroke="${color}" stroke-width="1.5"/>`;
+    shape = `<circle cx="${cx}" cy="${cy}" r="${size / 2 - 2}" fill="${color}" fill-opacity="${document.documentElement.classList.contains('theme-tofu') ? 0.35 : 0.2}" stroke="${color}" stroke-width="1.5"/>`;
   } else if (shapeIdx === 1) {
     const h = size / 2;
-    shape = `<polygon points="${cx},${y + 2} ${x + size - 2},${cy} ${cx},${y + size - 2} ${x + 2},${cy}" fill="${color}" fill-opacity="0.2" stroke="${color}" stroke-width="1.5"/>`;
+    shape = `<polygon points="${cx},${y + 2} ${x + size - 2},${cy} ${cx},${y + size - 2} ${x + 2},${cy}" fill="${color}" fill-opacity="${document.documentElement.classList.contains('theme-tofu') ? 0.35 : 0.2}" stroke="${color}" stroke-width="1.5"/>`;
   } else if (shapeIdx === 2) {
     const r = size / 2 - 2;
     const pts = [];
@@ -70,9 +99,9 @@ function generateAgentIconSVGElements(name, x, y, size) {
       const a = Math.PI / 3 * i - Math.PI / 2;
       pts.push(`${cx + r * Math.cos(a)},${cy + r * Math.sin(a)}`);
     }
-    shape = `<polygon points="${pts.join(' ')}" fill="${color}" fill-opacity="0.2" stroke="${color}" stroke-width="1.5"/>`;
+    shape = `<polygon points="${pts.join(' ')}" fill="${color}" fill-opacity="${document.documentElement.classList.contains('theme-tofu') ? 0.35 : 0.2}" stroke="${color}" stroke-width="1.5"/>`;
   } else {
-    shape = `<rect x="${x + 2}" y="${y + 2}" width="${size - 4}" height="${size - 4}" rx="4" fill="${color}" fill-opacity="0.2" stroke="${color}" stroke-width="1.5"/>`;
+    shape = `<rect x="${x + 2}" y="${y + 2}" width="${size - 4}" height="${size - 4}" rx="4" fill="${color}" fill-opacity="${document.documentElement.classList.contains('theme-tofu') ? 0.35 : 0.2}" stroke="${color}" stroke-width="1.5"/>`;
   }
 
   const text = `<text x="${cx}" y="${cy + fontSize * 0.35}" text-anchor="middle" fill="${color}" font-size="${fontSize}" font-weight="700" font-family="'Noto Sans KR', monospace">${initials}</text>`;
@@ -124,69 +153,58 @@ function buildAgentGraph(km) {
     // Check for category leads
     const categoryLeads = Object.values(nodes).filter(n => n.nodeType === 'category_lead');
 
-    if (categoryLeads.length > 0 && leadName) {
-      // Hierarchical edge building: Lead → Category Leads → Workers
-      // Also: Lead → DA
+    if (leadName) {
+      // Universal left-to-right flow: Workers → [CatLeads →] DA → Lead
+      const daNodes = Object.entries(nodes).filter(([, n]) => n.nodeType === 'da');
+      const catLeadNodes = Object.entries(nodes).filter(([, n]) => n.nodeType === 'category_lead');
+      const workerNodes = Object.entries(nodes).filter(([name, n]) =>
+        name !== leadName && n.nodeType === 'worker');
+
+      // Track connected workers
+      const connected = new Set();
+
+      // If hierarchy data exists, use it for category lead → worker mapping
       const hierarchy = plan.hierarchy || [];
-
-      for (const catLead of categoryLeads) {
-        // Lead → Category Lead
-        edges.push({ from: leadName, to: catLead.name, type: 'dependency', active: catLead.progress > 0 && catLead.progress < 100 });
-
-        // Category Lead → Workers (match by hierarchy table or name pattern)
-        const hierEntry = hierarchy.find(h => (h.parent || '').replace(/^@/, '') === catLead.name);
+      for (const [clName, clNode] of catLeadNodes) {
+        const hierEntry = hierarchy.find(h => (h.parent || '').replace(/^@/, '') === clName);
         if (hierEntry && hierEntry.children) {
           const children = hierEntry.children.split(',').map(c => c.trim().replace(/^@/, ''));
           for (const child of children) {
-            if (nodes[child]) {
-              edges.push({ from: catLead.name, to: child, type: 'dependency', active: nodes[child].progress > 0 && nodes[child].progress < 100 });
+            if (nodes[child] && nodes[child].nodeType === 'worker') {
+              edges.push({ from: child, to: clName, type: 'dependency', active: nodes[child].progress > 0 && nodes[child].progress < 100 });
+              connected.add(child);
             }
           }
+        }
+        // CatLead → DA or Lead
+        if (daNodes.length > 0) {
+          edges.push({ from: clName, to: daNodes[0][0], type: 'dependency', active: clNode.progress > 0 && clNode.progress < 100 });
         } else {
-          // Fallback: connect workers that aren't lead/da/category_lead to nearest category lead by name pattern
-          for (const [wName, wNode] of Object.entries(nodes)) {
-            if (wNode.nodeType === 'worker') {
-              // vault-intel-lead manages graph/retrieval/link workers
-              if (catLead.name.includes('intel') && (wName.includes('graph') || wName.includes('retrieval') || wName.includes('link') || wName.includes('curator'))) {
-                edges.push({ from: catLead.name, to: wName, type: 'dependency', active: wNode.progress > 0 && wNode.progress < 100 });
-              }
-              // content-proc-lead manages content/deep/analyzer workers
-              if (catLead.name.includes('proc') && (wName.includes('content') || wName.includes('deep') || wName.includes('analyzer') || wName.includes('extractor'))) {
-                edges.push({ from: catLead.name, to: wName, type: 'dependency', active: wNode.progress > 0 && wNode.progress < 100 });
-              }
-            }
-          }
+          edges.push({ from: clName, to: leadName, type: 'dependency', active: clNode.progress > 0 && clNode.progress < 100 });
         }
       }
 
-      // Lead → DA and other direct children from hierarchy
-      // First check Lead's own hierarchy entry
-      const leadHier = hierarchy.find(h => (h.parent || '').replace(/^@/, '') === leadName);
-      if (leadHier && leadHier.children) {
-        const leadChildren = leadHier.children.split(',').map(c => c.trim().replace(/^@/, ''));
-        for (const child of leadChildren) {
-          // Skip already-connected category leads
-          if (nodes[child] && nodes[child].nodeType !== 'category_lead') {
-            edges.push({ from: leadName, to: child, type: 'dependency', active: nodes[child].progress > 0 && nodes[child].progress < 100 });
-          }
+      // Workers not connected by hierarchy → connect to nearest cat lead or DA or lead
+      for (const [wName, wNode] of workerNodes) {
+        if (connected.has(wName)) continue;
+        const isActive = wNode.progress > 0 && wNode.progress < 100;
+        if (catLeadNodes.length > 0) {
+          // Connect to first category lead (fallback)
+          edges.push({ from: wName, to: catLeadNodes[0][0], type: 'dependency', active: !!isActive });
+        } else if (daNodes.length > 0) {
+          edges.push({ from: wName, to: daNodes[0][0], type: 'dependency', active: !!isActive });
+        } else {
+          edges.push({ from: wName, to: leadName, type: 'dependency', active: !!isActive });
         }
-      } else {
-        // Fallback: detect DA by nodeType
-        for (const [name, node] of Object.entries(nodes)) {
-          if (node.nodeType === 'da') {
-            edges.push({ from: leadName, to: name, type: 'dependency', active: node.progress > 0 && node.progress < 100 });
-          }
-        }
+        connected.add(wName);
       }
-    } else if (leadName) {
-      // Fallback: flat star topology (backward compatible)
-      for (const name of Object.keys(nodes)) {
-        if (name !== leadName) {
-          const targetNode = nodes[name];
-          const isActive = targetNode && targetNode.progress > 0 && targetNode.progress < 100;
-          edges.push({ from: leadName, to: name, type: 'dependency', active: !!isActive });
-        }
+
+      // DA → Lead
+      for (const [daName, daNode] of daNodes) {
+        edges.push({ from: daName, to: leadName, type: 'dependency', active: daNode.progress > 0 && daNode.progress < 100 });
       }
+
+      // If no DA and no cat leads: already handled above (workers → lead)
     }
     return { nodes: Object.values(nodes), edges };
   }
@@ -335,10 +353,10 @@ function renderNodeGraph(km) {
   // Layout: Left-to-right layers
   const NODE_W = 220;
   const NODE_H = 105;
-  const LAYER_GAP = 280;
   const NODE_GAP = 110;
   const PAD_X = 30;
   const PAD_Y = 20;
+  // LAYER_GAP is computed dynamically after layer grouping below
 
   // Compute layers (topological sort)
   const incomingDeps = {};
@@ -367,6 +385,15 @@ function renderNodeGraph(km) {
     }
   }
 
+  // Reposition Lead to last layer, DA to second-to-last
+  // This reflects the actual workflow: Workers → DA review → Lead aggregation
+  let maxLayer = 0;
+  for (const n of graph.nodes) { if (layerMap[n.name] > maxLayer) maxLayer = layerMap[n.name]; }
+  for (const n of graph.nodes) {
+    if (n.nodeType === 'lead') layerMap[n.name] = maxLayer + 2;
+    else if (n.nodeType === 'da') layerMap[n.name] = maxLayer + 1;
+  }
+
   // Group nodes by layer
   const layers = {};
   for (const n of graph.nodes) {
@@ -378,24 +405,74 @@ function renderNodeGraph(km) {
   // Assign coordinates
   const nodePos = {};
   const layerKeys = Object.keys(layers).map(Number).sort((a, b) => a - b);
+
+  // Fixed LAYER_GAP for uniform spacing (horizontal scroll via overflow-x: auto)
+  const LAYER_GAP = 260;
+
   let maxY = 0;
 
-  for (const lk of layerKeys) {
+  for (let idx = 0; idx < layerKeys.length; idx++) {
+    const lk = layerKeys[idx];
     const nodesInLayer = layers[lk];
     for (let i = 0; i < nodesInLayer.length; i++) {
-      const x = PAD_X + lk * LAYER_GAP;
+      const x = PAD_X + idx * LAYER_GAP;
       const y = PAD_Y + i * NODE_GAP;
       nodePos[nodesInLayer[i].name] = { x, y };
       if (y + NODE_H > maxY) maxY = y + NODE_H;
     }
   }
 
-  const svgWidth = PAD_X * 2 + (layerKeys.length) * LAYER_GAP + NODE_W;
-  const svgHeight = maxY + PAD_Y;
+  const svgWidth = PAD_X * 2 + Math.max(layerKeys.length - 1, 0) * LAYER_GAP + NODE_W;
+  const svgHeight = maxY + PAD_Y + 30; // extra space for phase labels
   svgEl.setAttribute('width', svgWidth);
   svgEl.setAttribute('height', Math.max(svgHeight, 160));
 
   let svgContent = '';
+
+  // Phase background boxes (from workflowPhases data)
+  const workflowPhases = km.plan?.workflowPhases || [];
+  if (workflowPhases.length > 0 && layerKeys.length > 0) {
+    const borderVar = getComputedStyle(document.documentElement).getPropertyValue('--border').trim() || '#1e2a3a';
+    const bgSecVar = getComputedStyle(document.documentElement).getPropertyValue('--bg-secondary').trim() || '#0f1419';
+    const textMutedVar = getComputedStyle(document.documentElement).getPropertyValue('--text-muted').trim() || '#6b7a8a';
+    for (let pi = 0; pi < Math.min(workflowPhases.length, layerKeys.length); pi++) {
+      const phase = workflowPhases[pi];
+      const lk = layerKeys[pi];
+      const nodesInLayer = layers[lk] || [];
+      if (!nodesInLayer.length) continue;
+      const px = PAD_X + pi * LAYER_GAP - 12;
+      const py = 4;
+      const pw = NODE_W + 24;
+      const ph = Math.max(nodesInLayer.length * NODE_GAP + 16, NODE_H + 28);
+      svgContent += `<rect x="${px}" y="${py}" width="${pw}" height="${ph}" rx="10" fill="${bgSecVar}" stroke="${borderVar}" stroke-width="1" opacity="0.6"/>`;
+      svgContent += `<text x="${px + pw / 2}" y="${py + 14}" text-anchor="middle" fill="${textMutedVar}" font-size="10" font-weight="600" font-family="var(--font-mono, monospace)" letter-spacing="0.05em">${escHtml(phase.phase || 'Phase ' + (pi + 1))}</text>`;
+    }
+  }
+
+  // Auto-generated layer group boxes (when no explicit workflowPhases)
+  if (workflowPhases.length === 0 && layerKeys.length > 1) {
+    const isTofu = document.documentElement.classList.contains('theme-tofu');
+    const borderVar = isTofu ? '#c4a882' : (getComputedStyle(document.documentElement).getPropertyValue('--border').trim() || '#1e2a3a');
+    const bgFill = isTofu ? '#f0e6d6' : (getComputedStyle(document.documentElement).getPropertyValue('--bg-secondary').trim() || '#0f1419');
+    const textFill = isTofu ? '#8b6914' : (getComputedStyle(document.documentElement).getPropertyValue('--text-muted').trim() || '#6b7a8a');
+    const boxOpacity = isTofu ? '0.85' : '0.4';
+    const textOpacity = isTofu ? '1' : '0.7';
+    for (let idx = 0; idx < layerKeys.length; idx++) {
+      const lk = layerKeys[idx];
+      const nodesInLayer = layers[lk] || [];
+      if (nodesInLayer.length < 2) continue; // Only group layers with 2+ nodes
+      const px = PAD_X + idx * LAYER_GAP - 12;
+      const py = 4;
+      const pw = NODE_W + 24;
+      const ph = Math.max(nodesInLayer.length * NODE_GAP + 16, NODE_H + 28);
+      // Determine group label from node types
+      const hasWorkers = nodesInLayer.some(n => n.nodeType === 'worker');
+      const hasCatLead = nodesInLayer.some(n => n.nodeType === 'category_lead');
+      const label = hasCatLead ? 'Category Leads' : hasWorkers ? 'Workers' : `Layer ${idx + 1}`;
+      svgContent += `<rect x="${px}" y="${py}" width="${pw}" height="${ph}" rx="10" fill="${bgFill}" stroke="${borderVar}" stroke-width="${isTofu ? '1.5' : '1'}" opacity="${boxOpacity}"/>`;
+      svgContent += `<text x="${px + pw / 2}" y="${py + 14}" text-anchor="middle" fill="${textFill}" font-size="10" font-weight="700" font-family="var(--font-mono, monospace)" letter-spacing="0.05em" opacity="${textOpacity}">${label}</text>`;
+    }
+  }
 
   // Arrowhead marker defs
   svgContent += `<defs>
@@ -403,7 +480,7 @@ function renderNodeGraph(km) {
       <polygon points="0 0, 10 4, 0 8" fill="#6b7a8a"/>
     </marker>
     <marker id="arrow-active" markerWidth="10" markerHeight="8" refX="10" refY="4" orient="auto">
-      <polygon points="0 0, 10 4, 0 8" fill="#22d3ee"/>
+      <polygon points="0 0, 10 4, 0 8" fill="#22c55e"/>
     </marker>
     <marker id="arrow-message" markerWidth="10" markerHeight="8" refX="10" refY="4" orient="auto">
       <polygon points="0 0, 10 4, 0 8" fill="#34d399"/>
@@ -432,7 +509,7 @@ function renderNodeGraph(km) {
 
     const isMsg = edge.type === 'message';
     const isActive = edge.active;
-    const strokeColor = isMsg ? '#34d399' : isActive ? '#22d3ee' : '#4a5568';
+    const strokeColor = isMsg ? '#34d399' : isActive ? '#22c55e' : '#4a5568';
     const strokeWidth = isActive ? 2.5 : 2;
     const opacity = isActive ? 1 : 0.5;
     const dashArray = isMsg ? 'stroke-dasharray="6 3"' : '';
@@ -468,7 +545,7 @@ function renderNodeGraph(km) {
     const isDA = node.nodeType === 'da';
     const isLeadNode = node.nodeType === 'lead';
     const isCatLead = node.nodeType === 'category_lead';
-    const strokeColor = isDA ? '#a78bfa' : isLeadNode ? '#fbbf24' : isCatLead ? '#f97316' : isActive ? '#22d3ee' : isDone ? '#34d399' : '#1e2a3a';
+    const strokeColor = isDA ? '#a78bfa' : isLeadNode ? '#fbbf24' : isCatLead ? '#f97316' : isActive ? '#22c55e' : isDone ? '#3b82f6' : '#fbbf24';
     const strokeWidth = isLeadNode ? 3 : isCatLead ? 2.5 : isActive ? 2.5 : 2;
     const dashArray = isDA ? ' stroke-dasharray="5 3"' : '';
 
@@ -477,37 +554,31 @@ function renderNodeGraph(km) {
 
     // Active node glow (3-layer: outer + middle + inner)
     if (isActive) {
-      // Outer: wide soft pulse
-      svgContent += `<rect x="${pos.x - 4}" y="${pos.y - 4}" width="${NODE_W + 8}" height="${NODE_H + 8}" rx="11" fill="none" stroke="#22d3ee" stroke-width="1.5" opacity="0.15">
+      // Outer: wide soft pulse (green = working)
+      svgContent += `<rect x="${pos.x - 4}" y="${pos.y - 4}" width="${NODE_W + 8}" height="${NODE_H + 8}" rx="11" fill="none" stroke="#22c55e" stroke-width="1.5" opacity="0.15">
         <animate attributeName="opacity" values="0.05;0.25;0.05" dur="3s" repeatCount="indefinite"/>
         <animate attributeName="stroke-width" values="1;2.5;1" dur="3s" repeatCount="indefinite"/>
       </rect>`;
       // Middle: medium brightness
-      svgContent += `<rect x="${pos.x - 1}" y="${pos.y - 1}" width="${NODE_W + 2}" height="${NODE_H + 2}" rx="9" fill="none" stroke="#22d3ee" stroke-width="2" opacity="0.3">
+      svgContent += `<rect x="${pos.x - 1}" y="${pos.y - 1}" width="${NODE_W + 2}" height="${NODE_H + 2}" rx="9" fill="none" stroke="#22c55e" stroke-width="2" opacity="0.3">
         <animate attributeName="opacity" values="0.15;0.5;0.15" dur="2s" repeatCount="indefinite"/>
       </rect>`;
       // Inner: sharp border
-      svgContent += `<rect x="${pos.x}" y="${pos.y}" width="${NODE_W}" height="${NODE_H}" rx="8" fill="none" stroke="#22d3ee" stroke-width="2" opacity="0.5">
+      svgContent += `<rect x="${pos.x}" y="${pos.y}" width="${NODE_W}" height="${NODE_H}" rx="8" fill="none" stroke="#22c55e" stroke-width="2" opacity="0.5">
         <animate attributeName="opacity" values="0.3;0.8;0.3" dur="1.5s" repeatCount="indefinite"/>
       </rect>`;
     }
 
-    // Done node subtle glow
+    // Done node subtle glow (blue = done)
     if (isDone) {
-      svgContent += `<rect x="${pos.x}" y="${pos.y}" width="${NODE_W}" height="${NODE_H}" rx="8" fill="none" stroke="#34d399" stroke-width="1" opacity="0.25"/>`;
+      svgContent += `<rect x="${pos.x}" y="${pos.y}" width="${NODE_W}" height="${NODE_H}" rx="8" fill="none" stroke="#3b82f6" stroke-width="1" opacity="0.25"/>`;
     }
 
-    // Node background
-    svgContent += `<rect class="graph-node-rect" x="${pos.x}" y="${pos.y}" width="${NODE_W}" height="${NODE_H}" rx="8" fill="#141a22" stroke="${strokeColor}" stroke-width="${strokeWidth}"${dashArray}/>`;
+    // Node background (uses CSS variable for theme support)
+    const bgCard = getComputedStyle(document.documentElement).getPropertyValue('--bg-card').trim() || '#141a22';
+    svgContent += `<rect class="graph-node-rect" x="${pos.x}" y="${pos.y}" width="${NODE_W}" height="${NODE_H}" rx="8" fill="${bgCard}" stroke="${strokeColor}" stroke-width="${strokeWidth}"${dashArray}/>`;
 
-    // Agent icon (left side)
-    svgContent += generateAgentIconSVGElements(node.name, pos.x + 8, pos.y + 8, 28);
-
-    // Name text
-    const displayName = node.name.length > 18 ? node.name.slice(0, 17) + '\u2026' : node.name;
-    svgContent += `<text class="graph-node-text" x="${pos.x + 42}" y="${pos.y + 22}">${escHtml(displayName)}</text>`;
-
-    // Role badge for DA, Lead, and Category Lead
+    // Role badge (top-right corner, rendered first so name doesn't overlap)
     if (isDA) {
       svgContent += `<text x="${pos.x + NODE_W - 8}" y="${pos.y + 14}" text-anchor="end" fill="#a78bfa" font-size="9" font-weight="700" font-family="'JetBrains Mono', 'Noto Sans KR', monospace">DA</text>`;
     } else if (isLeadNode) {
@@ -516,30 +587,46 @@ function renderNodeGraph(km) {
       svgContent += `<text x="${pos.x + NODE_W - 8}" y="${pos.y + 14}" text-anchor="end" fill="#f97316" font-size="9" font-weight="700" font-family="'JetBrains Mono', 'Noto Sans KR', monospace">CAT.LEAD</text>`;
     }
 
+    // Agent icon (left side, shifted down to avoid badge overlap)
+    svgContent += generateAgentIconSVGElements(node.name, pos.x + 8, pos.y + 16, 24);
+
+    // Name text (below badge row)
+    const displayName = node.name.length > 18 ? node.name.slice(0, 17) + '\u2026' : node.name;
+    svgContent += `<text class="graph-node-text" x="${pos.x + 38}" y="${pos.y + 30}">${escHtml(displayName)}</text>`;
+
     // Model text
     if (node.model) {
-      svgContent += `<text class="graph-node-model" x="${pos.x + 42}" y="${pos.y + 34}">${escHtml(node.model)}</text>`;
+      svgContent += `<text class="graph-node-model" x="${pos.x + 38}" y="${pos.y + 42}">${escHtml(node.model)}</text>`;
     }
 
     // Task text (truncated) — enhanced with status-aware coloring
     const taskText = (node.task || node.tasks[0] || 'Waiting...').slice(0, 25);
-    const taskColor = isActive ? '#e2e8f0' : isDone ? '#a7f3d0' : '#94a3b8';
-    svgContent += `<text x="${pos.x + 8}" y="${pos.y + 52}" fill="${taskColor}" font-size="12" font-weight="${isActive ? '600' : '400'}" font-family="'Inter', 'Noto Sans KR', sans-serif">${escHtml(taskText)}</text>`;
+    const textPrimary = getComputedStyle(document.documentElement).getPropertyValue('--text-primary').trim() || '#e2e8f0';
+    const textSecondary = getComputedStyle(document.documentElement).getPropertyValue('--text-secondary').trim() || '#94a3b8';
+    const taskColor = isActive ? textPrimary : isDone ? '#93c5fd' : textSecondary;
+    svgContent += `<text x="${pos.x + 8}" y="${pos.y + 56}" fill="${taskColor}" font-size="11" font-weight="${isActive ? '600' : '400'}" font-family="'Inter', 'Noto Sans KR', sans-serif">${escHtml(taskText)}</text>`;
     if (isActive && node.task) {
-      svgContent += `<text x="${pos.x + 8}" y="${pos.y + 66}" fill="#94a3b8" font-size="10" font-family="'Inter', 'Noto Sans KR', sans-serif">In progress...</text>`;
+      svgContent += `<text x="${pos.x + 8}" y="${pos.y + 68}" fill="#94a3b8" font-size="10" font-family="'Inter', 'Noto Sans KR', sans-serif">In progress...</text>`;
     }
 
     // Progress bar
     const pct = node.progress || 0;
     const barW = NODE_W - 16;
-    const fillColor = isDone ? '#34d399' : '#22d3ee';
-    svgContent += `<rect x="${pos.x + 8}" y="${pos.y + NODE_H - 14}" width="${barW}" height="4" rx="2" fill="#1e2a3a"/>`;
+    const fillColor = isDone ? '#3b82f6' : isActive ? '#22c55e' : '#fbbf24';
+    svgContent += `<rect x="${pos.x + 8}" y="${pos.y + NODE_H - 14}" width="${barW}" height="4" rx="2" fill="var(--border, #1e2a3a)"/>`;
     svgContent += `<rect x="${pos.x + 8}" y="${pos.y + NODE_H - 14}" width="${barW * pct / 100}" height="4" rx="2" fill="${fillColor}"/>`;
 
-    // Percent text (right-aligned) — uses granular progress label
+    // Status text (right-aligned) — uses 3-state label
     const pctText = getProgressLabel(pct);
-    const pctColor = isDone ? '#34d399' : pct >= 80 ? '#fbbf24' : '#e2e8f0';
+    const pctColor = isDone ? '#3b82f6' : isActive ? '#22c55e' : '#fbbf24';
     svgContent += `<text x="${pos.x + NODE_W - 8}" y="${pos.y + NODE_H - 18}" text-anchor="end" fill="${pctColor}" font-size="11" font-weight="700" font-family="'JetBrains Mono', 'Noto Sans KR', monospace">${pctText}</text>`;
+
+    // Oversight label for DA and Lead (indicates they interact with all phases)
+    if (isDA) {
+      svgContent += `<text x="${pos.x + NODE_W / 2}" y="${pos.y + NODE_H + 14}" text-anchor="middle" fill="#a78bfa" font-size="9" font-weight="500" font-family="var(--font-mono, monospace)" opacity="0.7">\u2190 reviews all phases \u2192</text>`;
+    } else if (isLeadNode) {
+      svgContent += `<text x="${pos.x + NODE_W / 2}" y="${pos.y + NODE_H + 14}" text-anchor="middle" fill="#fbbf24" font-size="9" font-weight="500" font-family="var(--font-mono, monospace)" opacity="0.7">\u2190 oversees all phases \u2192</text>`;
+    }
 
     svgContent += `</g>`;
   }
@@ -703,11 +790,21 @@ function renderTeamPlan(km) {
   container.innerHTML = html;
 }
 
-// --- Progress label helper (granular 8-level scale) ---
+// --- Local timezone formatter ---
+function formatLocalTime(str) {
+  if (!str) return '';
+  // Already formatted short string (e.g. "16:06" or "오후 4:06")
+  if (str.length < 12 && !str.includes('T') && !str.includes('Z')) return str;
+  const d = new Date(str);
+  if (isNaN(d.getTime())) return str;
+  return d.toLocaleString('ko-KR', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
+}
+
+// --- Status label helper (3-state: Waiting / 작업중 / Done) ---
 function getProgressLabel(pct) {
   if (pct >= 100) return 'Done';
-  if (pct >= 80) return 'Wrapping up';
-  return pct + '%';
+  if (pct > 0) return '작업중';
+  return 'Waiting';
 }
 
 function renderLiveAgents(km) {
@@ -800,23 +897,19 @@ function renderAgentTiles(agentsToRender, teamMembers, allAgents) {
       </div>
       ${model ? `<div class="agent-tile-model">${escHtml(model)}</div>` : ''}
       <div class="agent-tile-task">${escHtml(a.task) || 'Waiting...'}</div>
-      <div class="agent-tile-progress">
-        <div class="agent-tile-progress-bar" style="width:${pct}%"></div>
-      </div>
+      <div class="agent-tile-status-badge ${statusClass}">${getProgressLabel(pct)}</div>
       <div class="agent-tile-footer">
-        <span class="agent-tile-percent">${getProgressLabel(pct)}</span>
         ${taskCountHtml}
-        <span class="agent-tile-time">${escHtml(a.updated) || ''}</span>
+        <span class="agent-tile-time">${escHtml(formatLocalTime(a.updated)) || ''}</span>
       </div>
     </div>`;
   }).join('');
 }
 
 function getAgentStatusClass(agent) {
-  if (agent.progress >= 100) return 'completed';
-  if (agent.progress >= 80) return 'wrapping-up';
-  if (agent.progress > 0 || (agent.task && agent.task.toLowerCase() !== 'waiting')) return 'active';
-  return 'idle';
+  if (agent.progress >= 100) return 'status-done';
+  if (agent.progress > 0) return 'status-working';
+  return 'status-waiting';
 }
 
 // --- Sprint Steps Toggle ---
@@ -1589,13 +1682,24 @@ function connectSSE() {
       if (msg.type === 'progress_push' && msg.data && lastKmWorkflow) {
         const pushData = msg.data;
         const agents = lastKmWorkflow.progress?.agents || [];
-        const cleanName = (pushData.agent || '').replace(/^@/, '');
-        const existing = agents.find(a => (a.agent || '').replace(/^@/, '') === cleanName);
-        if (existing) {
-          existing.progress = pushData.progress || existing.progress;
-          existing.task = pushData.task || existing.task;
-          existing.note = pushData.note || existing.note;
-          existing.updated = new Date().toLocaleTimeString('ko-KR');
+
+        // Batch "all done" signal
+        if (pushData.batch && pushData.allDone) {
+          for (const a of agents) {
+            a.progress = 100;
+            a.task = 'completed';
+            a.note = 'all done';
+            a.updated = new Date().toLocaleTimeString('ko-KR');
+          }
+        } else {
+          const cleanName = (pushData.agent || '').replace(/^@/, '');
+          const existing = agents.find(a => (a.agent || '').replace(/^@/, '') === cleanName);
+          if (existing) {
+            existing.progress = pushData.progress || existing.progress;
+            existing.task = pushData.task || existing.task;
+            existing.note = pushData.note || existing.note;
+            existing.updated = new Date().toLocaleTimeString('ko-KR');
+          }
         }
         // Re-render only affected sections (lightweight)
         renderLiveAgents(lastKmWorkflow);
@@ -1824,6 +1928,44 @@ function renderReportDetail(r) {
     html += '<div class="mc-bulletin">';
     r.bulletin.slice(0, 20).forEach(e => {
       html += `<div class="bulletin-entry"><span class="bulletin-time">${escHtml(e.time || '')}</span><span class="bulletin-agent">@${escHtml(e.agent || '')}</span><span class="bulletin-content">${escHtml(e.task || '')} ${escHtml(e.status || '')}</span></div>`;
+    });
+    html += '</div></div>';
+  }
+
+  // Message Log (agent-to-agent conversation log)
+  if (r.messageLog && r.messageLog.length) {
+    html += `<div class="mc-section"><div class="mc-section-header"><span class="mc-section-title">Message Log</span><span class="mc-section-badge">${r.messageLog.length}</span></div>`;
+    html += '<div class="report-message-log">';
+    html += '<div class="msg-log-header"><span>Time</span><span>From</span><span></span><span>To</span><span>Type</span><span>Summary</span></div>';
+    r.messageLog.forEach(msg => {
+      const time = msg.timestamp ? new Date(msg.timestamp).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', second: '2-digit' }) : '';
+      const typeCls = 'msg-type-' + (msg.type || '').replace(/_/g, '-');
+      html += `<div class="msg-log-row">
+        <span class="msg-log-time">${escHtml(time)}</span>
+        <span class="msg-log-from">@${escHtml(msg.from || '')}</span>
+        <span class="msg-log-arrow">&rarr;</span>
+        <span class="msg-log-to">@${escHtml(msg.to || '')}</span>
+        <span class="msg-log-type ${typeCls}">${escHtml(msg.type || '')}</span>
+        <span class="msg-log-summary">${escHtml(msg.summary || '')}</span>
+      </div>`;
+    });
+    html += '</div></div>';
+  }
+
+  // Spawn Prompts (collapsible cards per agent)
+  if (r.spawnPrompts && r.spawnPrompts.length) {
+    html += `<div class="mc-section"><div class="mc-section-header"><span class="mc-section-title">Spawn Prompts</span><span class="mc-section-badge">${r.spawnPrompts.length}</span></div>`;
+    html += '<div class="report-spawn-prompts">';
+    r.spawnPrompts.forEach(sp => {
+      html += `<div class="spawn-prompt-card">
+        <div class="spawn-prompt-header" onclick="this.parentElement.classList.toggle('expanded')">
+          <span class="spawn-prompt-agent">@${escHtml(sp.agent || '')}</span>
+          <span class="spawn-prompt-role">${escHtml(sp.role || '')}</span>
+          <span class="spawn-prompt-model">${escHtml(sp.model || '')}</span>
+          <span class="spawn-prompt-toggle">&#9660;</span>
+        </div>
+        <div class="spawn-prompt-body"><pre>${escHtml(sp.prompt || '')}</pre></div>
+      </div>`;
     });
     html += '</div></div>';
   }

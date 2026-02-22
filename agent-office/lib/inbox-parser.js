@@ -190,8 +190,8 @@ function generateBulletinFromInboxes(allInboxes) {
       if ((msg.text || '').length < 20) continue;
 
       const ts = msg.timestamp ? new Date(msg.timestamp) : new Date();
-      const timeStr = ts.toLocaleString('sv-SE', { hour: '2-digit', minute: '2-digit' }).slice(-5);
-      const dateStr = ts.toISOString().slice(0, 10);
+      const timeStr = ts.toLocaleTimeString('sv-SE', { hour: '2-digit', minute: '2-digit' });
+      const dateStr = ts.toLocaleDateString('sv-SE');
 
       entries.push({
         time: `${dateStr} ${timeStr}`,

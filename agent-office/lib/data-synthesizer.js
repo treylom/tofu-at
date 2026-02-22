@@ -191,7 +191,7 @@ function synthesizeProgress(nativeTeam, artifactProgress) {
       task,
       progress,
       updated: agentStatus.lastActivity
-        ? new Date(agentStatus.lastActivity).toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' })
+        ? new Date(agentStatus.lastActivity).toISOString()
         : '',
       note: agentStatus.status,
       _isActive: m.isActive,

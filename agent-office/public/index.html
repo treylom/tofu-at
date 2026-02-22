@@ -8,10 +8,22 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@400;700&display=swap" rel="stylesheet">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>&#9881;</text></svg>">
+  <link rel="preconnect" href="https://cdn.jsdelivr.net">
+  <link href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" rel="stylesheet">
 </head>
 <body>
 
   <div class="header">
+    <span class="tofu-mascot" title="Tofu">
+      <svg width="28" height="28" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="4" y="6" width="20" height="18" rx="4" fill="#FFF8E7" stroke="#D4C8B8" stroke-width="1.5"/>
+        <circle cx="11" cy="14" r="1.5" fill="#2c1f14"/>
+        <circle cx="17" cy="14" r="1.5" fill="#2c1f14"/>
+        <ellipse cx="9" cy="16" rx="2" ry="1.2" fill="#F8C4C4" opacity="0.5"/>
+        <ellipse cx="19" cy="16" rx="2" ry="1.2" fill="#F8C4C4" opacity="0.5"/>
+        <path d="M12.5 17.5 Q14 19 15.5 17.5" stroke="#2c1f14" stroke-width="1" stroke-linecap="round" fill="none"/>
+      </svg>
+    </span>
     <h1>Agent Office</h1>
     <span class="subtitle">Mission Control</span>
     <div class="mode-toggle" id="mode-toggle">
@@ -20,6 +32,11 @@
       <button class="mode-btn" data-mode="pixel" id="btn-mode-pixel">Pixel Office</button>
     </div>
     <button class="mc-clear-btn" onclick="clearSession()" title="Clear team session data">Clear</button>
+    <div class="theme-selector">
+      <span class="theme-selector-label">Theme</span>
+      <button class="theme-btn active" data-theme="classic" onclick="setTheme('classic')">Classic</button>
+      <button class="theme-btn" data-theme="tofu" onclick="setTheme('tofu')">Tofu</button>
+    </div>
     <span class="status-dot" id="live-dot" title="Live"></span>
   </div>
 
@@ -43,6 +60,11 @@
       <div class="mc-section-header">
         <span class="mc-section-title">Live Agents</span>
         <span class="mc-section-badge" id="mc-agent-count">0</span>
+      </div>
+      <div class="mc-status-legend">
+        <span class="legend-item"><span class="legend-dot" style="background:#22c55e"></span> 작업중 (Working)</span>
+        <span class="legend-item"><span class="legend-dot" style="background:#fbbf24"></span> Waiting</span>
+        <span class="legend-item"><span class="legend-dot" style="background:#3b82f6"></span> Done</span>
       </div>
       <div class="mc-agents" id="mc-agents"></div>
     </div>

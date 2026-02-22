@@ -1,5 +1,51 @@
 # Changelog
 
+## [2.1.1] - 2026-02-19
+
+### Added
+- **Prerequisite Context Loading** in `/teamify scan` (Step 2-1.5)
+  - Auto-reads CHANGELOG.md, BUGS.md from target file's directory
+  - Auto-reads matching Bug_Reports/ by component name (max 3 files)
+  - Scoped search only (no full-codebase scan)
+  - ~800 token budget for all prerequisite context
+- **Known Context injection** in spawn prompts (Step 5-5)
+  - Lead gets full prerequisites (recent changes, known issues, risk notes)
+  - Workers get only issues relevant to their assigned area
+  - Devil's Advocate gets "known bug regression" check criterion
+- `prerequisites` field in STEP 3 team composition output
+
+## [2.1.0] - 2026-02-19
+
+### Added
+- **`setup-bashrc.sh`** — Shell function installer for ai/ain/cleanup/ai-sync commands
+  - Supports bash and zsh (`--shell=zsh`)
+  - Idempotent: marker-based duplicate prevention (`# >>> teamify >>>`)
+  - `--with-auto-push` flag for optional auto git sync on Claude exit
+  - Project path parameterized (no hardcoding)
+- **`docs/installation-guide.md`** — Step-by-step Korean installation guide for Notion
+  - Covers WSL setup from scratch (Part 0)
+  - Visual guide with screenshot references
+  - FAQ/troubleshooting section
+- **`docs/screenshots/`** — Directory for installation guide screenshots
+
+### Changed
+- **`install.sh`** — Major rewrite (63 → ~300 lines)
+  - OS auto-detection (WSL, macOS, Linux Debian/RHEL)
+  - Interactive prerequisite check with auto-install offers (tmux)
+  - `settings.local.json` auto-configuration (env, teammateMode, hooks)
+  - JSON merge via Python3 with Node.js fallback
+  - Colored output with step counter ([1/7] format)
+  - Bilingual messages (English + Korean)
+  - Installation verification phase (file existence + JSON validity)
+  - Completion summary with environment info
+- **`README.md`** — Full rewrite
+  - Quick Start (3-line copy-paste)
+  - One-liner install command
+  - OS-specific setup notes (WSL, macOS, Linux)
+  - ai/ain command documentation
+  - Troubleshooting/FAQ section
+  - Link to detailed Korean guide
+
 ## [2.0.0] - 2026-02-19
 
 ### Initial Release
