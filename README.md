@@ -1,6 +1,6 @@
 # Tofu-AT (Tofu Agent Teams)
 
-> 🇰🇷 한국어 설명입니다. [English guide is below ↓](#tofu-at-english)
+> 🇰🇷 한국어 설명입니다. [English guide is below ↓]([#tofu-at-english](https://www.threads.com/@taehyeong_lim/post/DVFZO5xE71v))
 
 워크플로우를 Claude Code의 Agent Teams (Split Pane / Swarm)로 자동 변환하는 오케스트레이션 프레임워크.
 
