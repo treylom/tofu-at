@@ -337,11 +337,23 @@ WSL 초기 설정부터 전체 설치 과정을 담은 한국어 가이드:
 
 ---
 
-# tofu-at (English) {#tofu-at-english}
+# Tofu-AT (English)
+
+> 🇰🇷 한국어 가이드는 위에 있습니다. [Korean guide is above ↑](#tofu-at-tofu-agent-teams)
 
 Convert workflows into Agent Teams (Split Pane / Swarm) for Claude Code.
 
-**tofu-at** analyzes your existing skills, agents, and commands, then generates optimized Agent Teams configurations with spawn prompts, quality gates, and shared memory.
+---
+
+> ## 💡 Paste the message below into Claude Code for the most accurate installation
+>
+> ```
+> Install from https://github.com/treylom/tofu-at. You can also refer to https://tofu-at.manus.space for help.
+> ```
+
+---
+
+**Tofu-AT** analyzes your existing skills, agents, and commands, then generates optimized Agent Teams configurations with spawn prompts, quality gates, and shared memory.
 
 ## Quick Start
 
