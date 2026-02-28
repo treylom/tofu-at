@@ -129,6 +129,9 @@ first_run = false
 2. Glob(".team-os/registry.yaml"):
    → 없음: first_run = true
 
+3. Glob("agent-office/server.js"):
+   → 없음: first_run = true
+
 IF first_run == true:
   → 사용자에게 안내:
     "첫 실행이 감지되었습니다. 환경설정을 먼저 진행합니다."
@@ -274,10 +277,19 @@ Agent Office는 팀 대시보드로, 팀 운영 시 실시간 모니터링에 �
 
    방법 A (tofu-at 리포가 로컬에 있는 경우):
      Glob("tofu-at/install.sh") → 존재하면:
-       Bash("bash tofu-at/install.sh")
+       Bash("wc -c < tofu-at/install.sh") → 결과가 0 또는 비어있으면:
+         → "로컬 install.sh가 비어있습니다. GitHub에서 다운로드합니다."
+         → 방법 B로 진행
+       → 0보다 크면:
+         Bash("bash tofu-at/install.sh")
+         → Glob("agent-office/server.js") 로 결과 검증 (아래 3번으로)
 
-   방법 B (없는 경우 — GitHub에서 다운로드):
-     Bash("curl -fsSL https://raw.githubusercontent.com/treylom/tofu-at/main/install.sh | bash")
+   방법 B (로컬 install.sh 없거나 비어있는 경우 — GitHub에서 다운로드):
+     IF env_platform == "windows" OR env_platform == "wsl":
+       Bash("curl -fsSL --ssl-no-revoke https://raw.githubusercontent.com/treylom/tofu-at/main/install.sh | bash")
+     ELSE:
+       Bash("curl -fsSL https://raw.githubusercontent.com/treylom/tofu-at/main/install.sh | bash")
+     → Glob("agent-office/server.js") 로 결과 검증 (아래 3번으로)
 
    → install.sh가 다음을 자동 수행:
      - 필수 도구 확인 (git, node, tmux, claude)
@@ -286,21 +298,36 @@ Agent Office는 팀 대시보드로, 팀 운영 시 실시간 모니터링에 �
      - Agent Office 복사 + npm install
      - settings.local.json 구성
 
-3. 설치 후 재확인:
-   Glob("agent-office/server.js") → 여전히 없으면:
-     "Agent Office 설치에 실패했습니다.
+3. 설치 후 재확인 (install.sh 출력과 무관하게 반드시 실행):
+   Glob("agent-office/server.js") → 존재하면:
+     → "Agent Office 설치 성공 확인." / agent_office_found = true
+   → 여전히 없으면:
+     → 방법 A만 시도했다면 → 방법 B 시도 후 다시 3번 검증
+     → 방법 B까지 시도했다면 → 수동 설치 안내:
 
-      수동 설치 방법:
-        git clone https://github.com/treylom/tofu-at /tmp/tofu-at
-        bash /tmp/tofu-at/install.sh
+     IF Glob("tofu-at/") 또는 Bash("ls /tmp/tofu-at 2>/dev/null") → 이미 존재:
+       "기존 tofu-at 폴더를 업데이트합니다."
+       Bash("cd {존재하는 경로} && git pull origin main")
+       → install.sh가 비어있으면:
+         IF env_platform == "windows" OR env_platform == "wsl":
+           Bash("curl -fsSL --ssl-no-revoke https://raw.githubusercontent.com/treylom/tofu-at/main/install.sh -o {경로}/install.sh")
+         ELSE:
+           Bash("curl -fsSL https://raw.githubusercontent.com/treylom/tofu-at/main/install.sh -o {경로}/install.sh")
+       Bash("bash {경로}/install.sh")
+     ELSE:
+       Bash("git clone https://github.com/treylom/tofu-at /tmp/tofu-at && bash /tmp/tofu-at/install.sh")
 
-      상세 가이드 참조:
-        WebFetch('https://tofu-at.manus.space/llms-full.txt')
-        → 문제 해결(Troubleshooting) 섹션에서 플랫폼별 해결 방법을 확인하세요."
+     → 최종 재확인: Glob("agent-office/server.js") → 여전히 없으면:
+       "Agent Office 설치에 실패했습니다.
+
+        상세 가이드 참조:
+          WebFetch('https://tofu-at.manus.space/llms-full.txt')
+          → 문제 해결(Troubleshooting) 섹션에서 플랫폼별 해결 방법을 확인하세요."
 ```
 
 Why: Agent Office는 tofu-at GitHub 리포에 포함. install.sh 한 줄로 전체 인프라 설치.
-실패 시 docs URL에서 문제 해결 가이드를 참조할 수 있도록 안내.
+빈 install.sh(0 bytes) 방어, Windows SSL 오류 대응(`--ssl-no-revoke`),
+출력 대신 파일 존재로 성공 판단, 기존 폴더 존재 시 git pull로 업데이트(중복 clone 방지).
 
 ### Setup-6: 모델 + 컨텍스트 안내
 
@@ -490,7 +517,20 @@ agent_office_path를 아래 순서로 탐색 (먼저 찾은 경로 사용):
 2. Bash("echo $AGENT_OFFICE_PATH 2>/dev/null") → 환경변수로 명시 설정된 경우 사용
 
 → 모두 실패: agent_office_path = null
-→ null일 때: "Agent Office 미설치. 대시보드 없이 팀 운영 가능."
+→ null일 때:
+  AskUserQuestion({
+    "questions": [{
+      "question": "Agent Office(팀 대시보드)가 감지되지 않았습니다. 설치하시겠습니까?",
+      "header": "Agent Office",
+      "options": [
+        {"label": "설치", "description": "STEP 0-SETUP의 Setup-5를 실행하여 Agent Office 설치"},
+        {"label": "건너뛰기", "description": "대시보드 없이 팀 운영 계속 (나중에 /tofu-at setup으로 설치 가능)"}
+      ],
+      "multiSelect": false
+    }]
+  })
+  → "설치" 선택: STEP 0-SETUP의 Setup-5 (Agent Office 설치) 실행 후 현재 위치로 복귀
+  → "건너뛰기" 선택: agent_office_path = null 유지, 계속 진행
 
 env_profile에 추가:
 
@@ -1267,27 +1307,22 @@ Why: spawn-prompts 파일은 report JSON의 spawnPrompts 필드에 포함되어 
 워커 프롬프트 내 삽입 블록:
 ```xml
 <progress_update_rule>
-진행 상황 변경 시 대시보드에 즉시 보고.
-한국어/유니코드 인코딩 안전을 위해 Write 도구로 임시 파일 생성 후 curl -d @file 전송:
+대시보드 진행률 보고. HTTP Hooks가 도구 사용을 자동 추적하므로 heartbeat는 불필요.
+주요 마일스톤(시작/중간/완료)에서만 의미적 진행률을 보고:
 
-1) Write("/tmp/.tofu-at-progress.json") 호출:
-   내용: {"agent":"{name}","progress":{pct},"task":"{task}","note":"{note}"}
-
-2) Bash("curl -s -X POST http://localhost:3747/api/progress \
+Bash("curl -s -X POST http://localhost:3747/api/progress \
   -H 'Content-Type: application/json; charset=utf-8' \
-  -d @/tmp/.tofu-at-progress.json \
+  -d '{\"agent\":\"{name}\",\"progress\":{pct},\"task\":\"{task}\",\"note\":\"{note}\"}' \
   --connect-timeout 2 || true")
 
-타이밍: 시작(10%, 작업중) → 진행(20-80%, 작업중) → 완료(100%, Done)
-대시보드 표시: 0%=Waiting(노랑) | 1-99%=작업중(초록) | 100%=Done(파랑)
-curl 실패 시 무시 (대시보드 미실행 시 정상)
+타이밍: 시작(10%) → 중간(50%) → 완료(100%) (3회면 충분)
+curl 실패 시 무시 (HTTP Hooks가 활동을 자동 추적 중)
 </progress_update_rule>
 ```
 
-**Progress API 테스트 전략 (3회 시도)**:
-- 1차: 기본 프롬프트로 실행, curl 실행 비율 측정
-- 2차: 프롬프트 강조도 조정 후 재실행
-- 3차: 최종 판정 (50%+ 실행 → 유지, 미만 → hook fallback 전환)
+**Progress 추적 전략**:
+- **자동 추적 (HTTP Hooks)**: 도구 사용 시 `/hooks/event`로 자동 POST → heartbeat 불필요
+- **의미적 진행률 (curl)**: 주요 마일스톤 3회 (시작/중간/완료) → LLM이 누락해도 hooks가 백업
 
 ### 7-4-1. Devil's Advocate 스폰 (DA 활성화 시)
 

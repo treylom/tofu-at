@@ -121,6 +121,7 @@ app.post('/api/session/clear', (_req, res) => {
   try {
     const cleared = clearArtifacts();
     _progressOverlay = {}; // Clear progress overlay on session clear
+    _hookActivity = {};   // Clear hook activity on session clear
     _nativeSuppressed = true; // Suppress native data until new team activity
     invalidateCache();
     broadcast('team_os_updated', { event: 'session_clear', file: 'artifacts' });
@@ -167,6 +168,66 @@ app.post('/api/progress/done', (_req, res) => {
   }
   broadcast('progress_push', { batch: true, allDone: true });
   res.json({ success: true, count: Object.keys(_progressOverlay).length });
+});
+
+// --- Claude Code HTTP Hooks Receiver ---
+let _hookActivity = {}; // session_id → { lastSeen, toolCount, lastTool }
+
+app.post('/hooks/event', (req, res) => {
+  const { hook_event_name, session_id, tool_name } = req.body;
+  const now = Date.now();
+
+  switch (hook_event_name) {
+    case 'PostToolUse': {
+      if (!_hookActivity[session_id]) {
+        _hookActivity[session_id] = { lastSeen: now, toolCount: 0, lastTool: '', _ttl: null };
+      }
+      const activity = _hookActivity[session_id];
+      activity.lastSeen = now;
+      activity.toolCount++;
+      activity.lastTool = tool_name || '';
+      // Reset TTL on each activity (auto-expire after 10 minutes of inactivity)
+      if (activity._ttl) clearTimeout(activity._ttl);
+      activity._ttl = setTimeout(() => { delete _hookActivity[session_id]; }, 600000);
+      broadcast('hook_activity', { session_id, tool_name, toolCount: activity.toolCount, ts: now });
+      break;
+    }
+
+    case 'SubagentStart': {
+      broadcast('hook_lifecycle', { event: 'agent_start', session_id, ...req.body, ts: now });
+      break;
+    }
+
+    case 'SubagentStop': {
+      broadcast('hook_lifecycle', { event: 'agent_stop', session_id, ...req.body, ts: now });
+      break;
+    }
+
+    case 'TeammateIdle': {
+      broadcast('hook_lifecycle', { event: 'teammate_idle', session_id, ...req.body, ts: now });
+      break;
+    }
+
+    case 'TaskCompleted': {
+      broadcast('hook_lifecycle', { event: 'task_completed', session_id, ...req.body, ts: now });
+      break;
+    }
+
+    case 'Stop': {
+      broadcast('hook_lifecycle', { event: 'session_stop', session_id, ts: now });
+      delete _hookActivity[session_id];
+      break;
+    }
+
+    default:
+      broadcast('hook_event', { event: hook_event_name, session_id, ts: now });
+  }
+
+  res.json({ ok: true });
+});
+
+app.get('/hooks/activity', (_req, res) => {
+  res.json(_hookActivity);
 });
 
 // --- Browser Recovery API ---

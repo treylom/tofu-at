@@ -675,7 +675,7 @@ function render(data) {
   renderTeamOS(data.teamOS);
   renderMetrics();
   renderRalphReviews(km);
-  document.getElementById('timestamp').textContent = new Date(data.timestamp).toLocaleString('ko-KR');
+  document.getElementById('timestamp').textContent = new Date(data.timestamp).toLocaleString();
 }
 
 // === Mission Control ===
@@ -790,14 +790,14 @@ function renderTeamPlan(km) {
   container.innerHTML = html;
 }
 
-// --- Local timezone formatter ---
+// --- Local timezone formatter (auto-detect system timezone) ---
 function formatLocalTime(str) {
   if (!str) return '';
   // Already formatted short string (e.g. "16:06" or "오후 4:06")
   if (str.length < 12 && !str.includes('T') && !str.includes('Z')) return str;
   const d = new Date(str);
   if (isNaN(d.getTime())) return str;
-  return d.toLocaleString('ko-KR', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
+  return d.toLocaleString(undefined, { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
 }
 
 // --- Status label helper (3-state: Waiting / 작업중 / Done) ---
@@ -1706,7 +1706,7 @@ function connectSSE() {
             a.progress = 100;
             a.task = 'completed';
             a.note = 'all done';
-            a.updated = new Date().toLocaleTimeString('ko-KR');
+            a.updated = new Date().toLocaleTimeString();
           }
         } else {
           const cleanName = (pushData.agent || '').replace(/^@/, '');
@@ -1715,7 +1715,7 @@ function connectSSE() {
             existing.progress = pushData.progress || existing.progress;
             existing.task = pushData.task || existing.task;
             existing.note = pushData.note || existing.note;
-            existing.updated = new Date().toLocaleTimeString('ko-KR');
+            existing.updated = new Date().toLocaleTimeString();
           }
         }
         // Re-render only affected sections (lightweight)
@@ -1803,7 +1803,7 @@ async function fetchReports() {
     listEl.style.display = '';
 
     listEl.innerHTML = filtered.map(r => {
-      const date = r.timestamp ? new Date(r.timestamp).toLocaleString('ko-KR', { timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone, year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }) : '';
+      const date = r.timestamp ? new Date(r.timestamp).toLocaleString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }) : '';
       return `<div class="report-card" onclick="loadReport('${escHtml(r.id)}')">
         <div class="report-card-header">
           <span class="report-card-team">${escHtml(r.teamName)}</span>
@@ -1865,7 +1865,7 @@ function renderReportDetail(r) {
       <span class="report-detail-team">${escHtml(r.teamName || '')}</span>
       ${r.complexity ? `<span class="mc-plan-complexity standard">${escHtml(r.complexity)}</span>` : ''}
       ${r.duration ? `<span class="report-detail-duration">${escHtml(r.duration)}</span>` : ''}
-      <span class="report-detail-date">${r.timestamp ? new Date(r.timestamp).toLocaleString('ko-KR', { timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone, year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }) : ''}</span>
+      <span class="report-detail-date">${r.timestamp ? new Date(r.timestamp).toLocaleString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }) : ''}</span>
     </div>
   </div>`;
 
@@ -1955,7 +1955,7 @@ function renderReportDetail(r) {
     html += '<div class="report-message-log">';
     html += '<div class="msg-log-header"><span>Time</span><span>From</span><span></span><span>To</span><span>Type</span><span>Summary</span></div>';
     r.messageLog.forEach(msg => {
-      const time = msg.timestamp ? new Date(msg.timestamp).toLocaleTimeString('ko-KR', { hour: '2-digit', minute: '2-digit', second: '2-digit' }) : '';
+      const time = msg.timestamp ? new Date(msg.timestamp).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit', second: '2-digit' }) : '';
       const typeCls = 'msg-type-' + (msg.type || '').replace(/_/g, '-');
       html += `<div class="msg-log-row">
         <span class="msg-log-time">${escHtml(time)}</span>
