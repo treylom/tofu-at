@@ -1517,14 +1517,23 @@ IF ralph_loop.enabled == true:
         # DA 응답 자동 수신 대기
         advocate_response = DA 메시지 자동 수신
 
-      # 3. review_criteria 기준으로 리뷰 (DA 반론 반영)
+      # 3. review_criteria 4차원 정량 리뷰 (레퍼런스: tofu-at-workflow.md §8)
+      # 각 차원 0-5점 채점 후 가중 평균 산출
+      scores = {
+        completeness: { score: 0-5, weight: 1.5 },  # 할당 항목 누락 비율 (0% = 5점)
+        accuracy:     { score: 0-5, weight: 1.0 },  # 인용당 소스 존재 비율 (100% = 5점)
+        coverage:     { score: 0-5, weight: 1.0 },  # 항목당 분석 길이 (200자+ = 5점)
+        format:       { score: 0-5, weight: 0.5 }   # 출력 포맷 준수율 (100% = 5점)
+      }
       IF advocate_response:
-        review = Lead가 (worker_msg + advocate_response) 종합 평가 (ralph_loop.review_criteria)
+        Lead가 (worker_msg + advocate_response) 종합하여 각 차원 채점
       ELSE:
-        review = Lead가 결과 평가 (ralph_loop.review_criteria)
+        Lead가 worker_msg 기준으로 각 차원 채점
 
-      # 3. 판정
-      IF review == "SHIP":
+      weighted_avg = (c*1.5 + a*1.0 + v*1.0 + f*0.5) / 4.0
+
+      # 4. 판정: 가중 평균 3.5+ = SHIP, 미만 = REVISE
+      IF weighted_avg >= 3.5:  # SHIP
         TaskUpdate(status: "completed")
 
         # === 대시보드 진행 업데이트 (SHIP - 80% 대기) ===
@@ -1541,10 +1550,11 @@ IF ralph_loop.enabled == true:
         Bash("curl -s -X POST http://localhost:3747/api/progress -H 'Content-Type: application/json; charset=utf-8' -d @/tmp/.tofu-at-progress.json --connect-timeout 2 || true")
 
         TEAM_BULLETIN.md에 Append:
-          ## [{timestamp}] - {worker_name}
+          ## [{timestamp}] - Ralph Loop #{iteration}
+          **Worker**: {worker_name}
           **Task**: {task_description}
-          **Findings**: {결과 요약 1-2줄}
-          **Status**: SHIP (DA 리뷰 대기)
+          **Verdict**: SHIP (score: {weighted_avg}/5.0)
+          **Scores**: completeness={c}/5 accuracy={a}/5 coverage={v}/5 format={f}/5
 
         BREAK  # 다음 워커로
 
@@ -1560,10 +1570,12 @@ IF ralph_loop.enabled == true:
           Updated: → {current_timestamp}
 
         TEAM_BULLETIN.md에 Append:
-          ## [{timestamp}] - Ralph Review: {worker_name}
-          **Task**: REVISE #{iteration}
-          **Findings**: {피드백 요약}
-          **Status**: revise
+          ## [{timestamp}] - Ralph Loop #{iteration}
+          **Worker**: {worker_name}
+          **Task**: {task_description}
+          **Verdict**: REVISE (score: {weighted_avg}/5.0, threshold: 3.5)
+          **Feedback**: {부족한 차원과 구체적 개선 사항}
+          **Scores**: completeness={c}/5 accuracy={a}/5 coverage={v}/5 format={f}/5
 
         # 워커 재작업 결과 대기
 
@@ -1580,7 +1592,13 @@ IF ralph_loop.enabled == true:
       # 워커에게 대기 메시지 전송 (셧다운 보류)
       SendMessage(recipient: {worker_name}, content: "DA 종합 리뷰 대기 중입니다. 대기해 주세요.", summary: "max iterations - awaiting DA review")
 
-      TEAM_BULLETIN.md에 경고 + 마지막 점수표 기록
+      TEAM_BULLETIN.md에 Append:
+          ## [{timestamp}] - Ralph Loop #{iteration} (MAX REACHED)
+          **Worker**: {worker_name}
+          **Task**: {task_description}
+          **Verdict**: FORCED SHIP (max_iterations={max} reached)
+          **Scores**: completeness={c}/5 accuracy={a}/5 coverage={v}/5 format={f}/5
+          **Changes**: {마지막 수정 사항 요약}
 
   # Ralph 루프 완료 후
   # === Checkpoint 2 업데이트 ===
