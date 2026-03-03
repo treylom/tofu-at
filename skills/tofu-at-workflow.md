@@ -448,6 +448,56 @@ Phase 1: 자료조사          Phase 2: 제작              Phase 3: 검증     
 
 ---
 
+## 5.1. Phase Coverage Validation (MANDATORY)
+
+팀 구성 완료 후 모든 phase에 워커가 배정되었는지 검증합니다.
+Lead에게 실행 작업이 배정되면 차단합니다.
+
+### 검증 절차
+
+```
+팀 구성안(섹션 5 출력)을 입력으로:
+
+1. 모든 phase에 1명 이상 워커 배정 여부 확인
+   FOR each phase IN workflow_phases:
+     IF phase.assigned_workers == 0:
+       → ERROR: "Phase '{phase.name}'에 워커가 배정되지 않았습니다."
+       → 워커 추가 또는 기존 워커에 할당 필요
+
+2. Lead에게 구현 작업 배정 여부 확인
+   FOR each task IN lead.assigned_tasks:
+     IF task.type IN [파일추출, 웹스크래핑, 요약, 분석, 코드작성, 문서생성]:
+       → ERROR: "Lead에게 구현 작업 '{task.name}'이 배정되었습니다."
+       → 해당 작업을 워커에게 재배정 필수
+
+3. 미배정 phase 발견 시 워커 추가 또는 기존 워커에 할당
+```
+
+### Phase 유형별 필수 워커 매핑
+
+| Phase 유형 | 필수 워커 타입 | 모델 |
+|-----------|-------------|------|
+| 파일 추출 (PDF/PPTX) | content-extractor | Sonnet |
+| 웹 스크래핑 | web-scraper | Sonnet |
+| 요약/분석 | summarizer | Sonnet |
+| 교차 참조 | cross-referencer | Sonnet/Explore |
+| 문서 생성 | doc-writer | Sonnet |
+| 품질 검증 | DA | Sonnet |
+
+### 검증 실패 시 동작
+
+```
+검증 실패 항목이 1개 이상이면:
+  → 팀 구성안을 자동 수정 (워커 추가/재배정)
+  → 수정된 팀 구성안으로 STEP 3 AskUserQuestion 재호출
+  → 사용자에게 수정 사유 표시
+
+검증 통과:
+  → 정상 진행 (STEP 4로)
+```
+
+---
+
 ## 5.5 /prompt 파이프라인 통합
 
 > STEP 3 워크플로우 분석 결과가 STEP 5의 /prompt 내재화 파이프라인에 입력됩니다.
@@ -539,7 +589,8 @@ Phase 1: 자료조사          Phase 2: 제작              Phase 3: 검증     
 ├── team_plan.md        - 마스터 플랜, 단계 할당, 변경 이력
 ├── team_bulletin.md    - 발견/공지 게시판 (append-only)
 ├── team_findings.md    - 작업 결과 요약 (각 에이전트별)
-└── team_progress.md    - 태스크 상태 체크리스트
+├── team_progress.md    - 태스크 상태 체크리스트
+└── team_dead_ends.md   - 실패한 접근법 기록 (DEAD_ENDS 프로토콜)
 
 저장 위치 결정:
   IF .team-os/ 존재:
@@ -789,7 +840,193 @@ ralph_loop:
 ## [Timestamp] - Ralph Loop #{iteration}
 **Worker**: {worker_name}
 **Task**: {태스크}
-**Verdict**: SHIP / REVISE
-**Feedback**: {피드백 내용} (REVISE일 때)
+**Verdict**: SHIP / REVISE / REPLACE / PARTIAL / ESCALATE
+**Strategy**: {전략 선택 — REVISE 이상 시} (아래 §7.2 참조)
+**Feedback**: {피드백 내용} (REVISE 이상일 때)
 **Changes**: {수정 사항 요약} (재작업 후)
 ```
+
+---
+
+## 7. DEAD_ENDS 프로토콜 (kkirikkiri 패턴 흡수)
+
+> 실패한 접근법을 기록하여 팀원이 같은 실수를 반복하지 않도록 방지합니다.
+
+### 7.1 team_dead_ends.md 초기화
+
+팀 생성 시 team_dead_ends.md를 자동 초기화:
+
+```markdown
+# Dead Ends — 실패한 접근법 기록
+
+> 이 파일에 기록된 접근법은 이미 시도되었고 실패가 확인된 것입니다.
+> 새로운 시도 전에 반드시 이 파일을 읽고, 같은 실패를 반복하지 마세요.
+
+---
+```
+
+### 7.2 기록 트리거
+
+| 트리거 | 기록 주체 | 예시 |
+|--------|----------|------|
+| Ralph REVISE 2회 이상 (같은 접근법) | Lead | "JSON 파싱 정규식 접근 → 실패" |
+| Worker가 "불가능" 보고 | Worker 본인 | "API rate limit으로 병렬 5개 불가" |
+| DA가 근본적 결함 지적 | DA | "이 아키텍처에서는 실시간 불가" |
+| 외부 API/도구 오류 확인 | 발견한 에이전트 | "Playwright MCP headless 모드 크래시" |
+
+### 7.3 기록 형식
+
+```markdown
+## [Timestamp] - {Agent Name}
+**접근법**: {시도한 접근 방법}
+**실패 이유**: {왜 실패했는지}
+**증거**: {에러 메시지, 파일 경로 등}
+**대안**: {대안이 있다면 제시, 없으면 "미확인"}
+```
+
+### 7.4 에이전트 메모리 프로토콜 확장
+
+기존 프로토콜에 DEAD_ENDS 읽기를 추가:
+
+```
+작업 시작 전:
+  1. Read team_plan.md → 할당 확인
+  2. Read team_bulletin.md → 최근 발견사항 확인
+  3. Read team_dead_ends.md → 실패한 접근법 확인 ← NEW
+     → 내 작업과 관련된 dead end가 있으면 해당 접근법 회피
+
+작업 중:
+  4. 접근법 실패 확인 시 → team_dead_ends.md에 즉시 Append ← NEW
+  5. team_bulletin.md에 발견사항 Append
+  6. team_progress.md 상태 업데이트
+
+작업 완료 후:
+  7. team_findings.md에 결과 요약
+  8. 계획 변경 필요 시 리드에게 SendMessage
+```
+
+---
+
+## 7.2 Ralph 전략 확장 (kkirikkiri Validation Loop 흡수)
+
+> 기존 SHIP/REVISE 2개 판정을 5개 전략으로 확장합니다.
+
+### 전략 테이블
+
+| 전략 | 설명 | 트리거 조건 | 다음 액션 |
+|------|------|-----------|----------|
+| **SHIP** | 결과 승인 | 품질 기준 충족 | TaskUpdate(completed), 다음 태스크 |
+| **REVISE** | 피드백 후 수정 | 부분적 미충족, 수정 가능 | SendMessage(REVISE 피드백), iteration++ |
+| **REPLACE** | 워커 교체 후 재시도 | REVISE 2회 후에도 미충족 | 기존 워커 shutdown, 새 워커 스폰 |
+| **PARTIAL** | 부분 승인 + 나머지 재작업 | 일부만 충족 | 충족 부분 SHIP, 미충족 부분만 REVISE |
+| **ESCALATE** | 사용자에게 에스컬레이션 | 팀 내 해결 불가 | AskUserQuestion으로 방향 확인 |
+
+### 전략 선택 알고리즘
+
+```
+IF review_score >= ship_threshold:
+  → SHIP
+
+ELIF iteration < max_iterations:
+  IF partial_pass_items > 0:
+    → PARTIAL (통과 항목은 SHIP, 나머지만 REVISE)
+  ELSE:
+    → REVISE (전체 재작업)
+
+ELIF iteration >= max_iterations AND same_worker_failed:
+  → REPLACE (워커 교체)
+  → team_dead_ends.md에 실패 접근법 기록
+
+ELIF fundamental_flaw_detected:
+  → ESCALATE (사용자 판단 요청)
+  → 리드가 AskUserQuestion 호출:
+    "워커 {name}이 {문제}를 해결하지 못했습니다. 어떻게 진행할까요?"
+    options: ["다른 접근법 시도", "요구사항 변경", "현재 결과로 진행", "작업 중단"]
+
+ELSE:
+  → REVISE (기본 폴백)
+```
+
+### REPLACE 워커 교체 프로토콜
+
+```
+1. 기존 워커에게 shutdown_request 전송
+2. team_dead_ends.md에 기존 워커의 접근법 + 실패 이유 기록
+3. 새 워커 스폰 (같은 이름 재사용 금지!)
+   → 새 워커 프롬프트에 team_dead_ends.md 참조 지시 포함
+4. iteration 카운터 리셋 (새 워커에게는 fresh start)
+```
+
+---
+
+## 8. Dynamic Gate 검증 파이프라인 (pumasi 패턴 흡수)
+
+> 워커 결과를 Ralph(LLM 리뷰) 전에 bash 기반으로 자동 검증합니다.
+> 참조 스킬: `dynamic-gate-verification.md`
+
+### 통합 검증 흐름
+
+```
+워커 결과 수신
+  → Dynamic Gate (bash, zero-token): tsc → build → test → lint
+    → FAIL: 워커에게 에러 메시지 + rework (Ralph 진입 전 차단)
+    → PASS: Ralph 루프 (LLM 리뷰, 활성화 시)
+      → PASS: DA 리뷰 (활성화 시) → 통합
+      → FAIL: Ralph 전략 (REVISE/REPLACE/PARTIAL/ESCALATE)
+```
+
+### Dynamic Gate 적용 조건
+
+| 조건 | Dynamic Gate | Ralph |
+|------|-------------|-------|
+| 코딩 태스크 (코드 파일 생성/수정) | **필수** | 선택 |
+| 분석/리서치 태스크 | 스킵 | 선택 |
+| 문서 생성 태스크 | 스킵 | 선택 |
+| 혼합 태스크 (코드+문서) | 코드 부분만 적용 | 전체 적용 |
+
+### Dynamic Gate 상세 — `dynamic-gate-verification.md` 참조
+
+게이트 파이프라인:
+1. **tsc** (TypeScript 프로젝트): `npx tsc --noEmit` → 타입 에러 검출
+2. **build**: `npm run build` 또는 감지된 빌드 명령 → 빌드 성공 여부
+3. **test**: `npm test` 또는 감지된 테스트 명령 → 테스트 통과 여부
+4. **lint**: `npm run lint` 또는 감지된 린트 명령 → 코드 품질
+
+각 게이트는 exit code로 판정하므로 **LLM 토큰 소비 제로(zero-token)**.
+
+---
+
+## 9. Self-Check List (pumasi discipline — Leader 코드 작성 방지)
+
+> Leader/Lead가 코드 본문을 직접 작성하는 것을 방지합니다.
+> 코딩 태스크에서 Leader는 오케스트레이터 역할만 수행합니다.
+
+### 코딩 태스크 감지 시 Self-Check (Lead 프롬프트에 자동 주입)
+
+```xml
+<self_check_list trigger="coding_task">
+  코딩 태스크 감지됨. 아래 체크리스트를 매 Write/Edit 호출 전에 확인:
+
+  □ Write/Edit 대상이 코드 파일(.ts/.js/.py/.go/.rs 등)?
+    → YES: 금지! 워커에게 위임하세요. 설정 파일(.json/.yaml/.toml/.md)만 직접 수정 가능.
+
+  □ 워커에게 함수 본문(body)을 전달하려고 합니까?
+    → YES: 시그니처(signature)만 남기고 본문 삭제. NL 요구사항으로 변환.
+
+  □ 10줄 이상의 코드 블록을 SendMessage에 포함하려고 합니까?
+    → YES: 삭제. 대신 자연어 요구사항 + 제약조건 + 테스트 기준으로 변환.
+
+  예외:
+  - 1-2줄의 import/config 수정은 허용
+  - 빌드 스크립트(package.json scripts) 수정은 허용
+  - team_plan.md 등 마크다운 파일은 허용
+</self_check_list>
+```
+
+### Self-Check 적용 조건
+
+| 태스크 유형 | Self-Check 적용 |
+|-----------|----------------|
+| dev 프리셋 | **항상 적용** |
+| scan 모드 (코드 분석) | 코드 수정 발견 시 적용 |
+| 리서치/분석/콘텐츠 프리셋 | 미적용 |

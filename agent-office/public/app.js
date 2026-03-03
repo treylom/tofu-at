@@ -1696,9 +1696,20 @@ function connectSSE() {
       }
 
       // Real-time progress push: update single agent tile + graph node without full re-fetch
-      if (msg.type === 'progress_push' && msg.data && lastKmWorkflow) {
+      if (msg.type === 'progress_push' && msg.data) {
+        // Bootstrap lastKmWorkflow if null (first progress_push before any fetchStatus)
+        if (!lastKmWorkflow) {
+          lastKmWorkflow = { progress: { agents: [] } };
+        }
+        if (!lastKmWorkflow.progress) {
+          lastKmWorkflow.progress = { agents: [] };
+        }
+        if (!lastKmWorkflow.progress.agents) {
+          lastKmWorkflow.progress.agents = [];
+        }
+
         const pushData = msg.data;
-        const agents = lastKmWorkflow.progress?.agents || [];
+        const agents = lastKmWorkflow.progress.agents;
 
         // Batch "all done" signal
         if (pushData.batch && pushData.allDone) {
@@ -1710,13 +1721,16 @@ function connectSSE() {
           }
         } else {
           const cleanName = (pushData.agent || '').replace(/^@/, '');
-          const existing = agents.find(a => (a.agent || '').replace(/^@/, '') === cleanName);
-          if (existing) {
-            existing.progress = pushData.progress || existing.progress;
-            existing.task = pushData.task || existing.task;
-            existing.note = pushData.note || existing.note;
-            existing.updated = new Date().toLocaleTimeString();
+          let existing = agents.find(a => (a.agent || '').replace(/^@/, '') === cleanName);
+          // Create entry for unregistered agent (overlay-only or newly spawned)
+          if (!existing) {
+            existing = { agent: cleanName, progress: 0, task: '', note: '' };
+            agents.push(existing);
           }
+          existing.progress = pushData.progress || existing.progress;
+          existing.task = pushData.task || existing.task;
+          existing.note = pushData.note || existing.note;
+          existing.updated = new Date().toLocaleTimeString();
         }
         // Re-render only affected sections (lightweight)
         renderLiveAgents(lastKmWorkflow);

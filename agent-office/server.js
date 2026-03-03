@@ -37,7 +37,13 @@ let _nativeSuppressed = false;
 
 // --- API ---
 function mergeProgressOverlay(km) {
-  if (!km?.progress?.agents || Object.keys(_progressOverlay).length === 0) return km;
+  if (Object.keys(_progressOverlay).length === 0) return km;
+
+  // Bootstrap progress structure if missing
+  if (!km) km = {};
+  if (!km.progress) km.progress = {};
+  if (!km.progress.agents) km.progress.agents = [];
+
   const now = Date.now();
   for (const agent of km.progress.agents) {
     const cleanName = (agent.agent || '').replace(/^@/, '');
@@ -50,6 +56,22 @@ function mergeProgressOverlay(km) {
       agent.updated = new Date(overlay.ts).toISOString();
     }
   }
+
+  // Inject overlay-only agents not present in the agents array
+  const existingNames = new Set(km.progress.agents.map(a => (a.agent || '').replace(/^@/, '')));
+  for (const [key, overlay] of Object.entries(_progressOverlay)) {
+    const cleanName = key.replace(/^@/, '');
+    if (!existingNames.has(cleanName) && (now - overlay.ts) < 600000) {
+      km.progress.agents.push({
+        agent: cleanName,
+        progress: overlay.progress,
+        task: overlay.task || '',
+        note: overlay.note || '',
+        updated: new Date(overlay.ts).toISOString(),
+      });
+    }
+  }
+
   return km;
 }
 
@@ -138,6 +160,11 @@ app.post('/api/progress', (req, res) => {
   res.set('Content-Type', 'application/json; charset=utf-8');
   const { agent, progress, task, note } = req.body;
   if (!agent) return res.status(400).json({ error: 'agent required' });
+
+  // Auto-unsuppress: progress push means active work is happening
+  if (_nativeSuppressed) {
+    _nativeSuppressed = false;
+  }
 
   _progressOverlay[agent] = {
     agent,

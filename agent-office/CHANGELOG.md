@@ -2,6 +2,71 @@
 
 ---
 
+## [2026-02-28] - v3.7 (HTTP Hooks Integration + Timezone Auto-detect + Activity TTL)
+
+### 수정 파일
+- `server.js` — `/hooks/event` 통합 엔드포인트, `/hooks/activity` 조회, `_hookActivity` TTL
+- `public/app.js` — 시간대 자동 감지 (하드코딩 제거)
+- `.claude/settings.local.json` — HTTP hook 설정 (6개 이벤트 타입)
+- `.claude/commands/tofu-at.md` — `progress_update_rule` 간소화
+- `.claude/commands/tofu-at-codex.md` — 테이블 설명 업데이트
+
+### 변경 내용
+
+#### Claude Code HTTP Hooks 수신 (신규 기능)
+- [Added]: `POST /hooks/event` — Claude Code의 HTTP hook 이벤트를 통합 수신하는 단일 엔드포인트
+  - `hook_event_name`으로 switch 분기: PostToolUse, SubagentStart, SubagentStop, TeammateIdle, TaskCompleted, Stop
+  - 알 수 없는 이벤트도 `{"ok":true}` 반환 (default case로 SSE broadcast)
+- [Added]: `GET /hooks/activity` — 세션별 도구 사용 통계 조회 (`session_id → { lastSeen, toolCount, lastTool }`)
+- [Added]: `_hookActivity` 세션 추적 — PostToolUse마다 toolCount 증가, lastTool 갱신
+- [Added]: Stop 이벤트 시 해당 세션 `_hookActivity`에서 삭제 (세션 종료 정리)
+- [Added]: `session/clear` 시 `_hookActivity` 동시 초기화
+- [Added]: 3종 SSE 브로드캐스트 — `hook_activity` (도구 사용), `hook_lifecycle` (에이전트 생명주기), `hook_event` (기타)
+
+#### _hookActivity TTL (메모리 누수 방지)
+- [Added]: PostToolUse 수신 시 10분 슬라이딩 윈도우 TTL 자동 설정
+  - 활동할 때마다 타이머 리셋 (`clearTimeout` → 새 `setTimeout`)
+  - 10분간 활동 없는 세션은 자동 삭제 (비정상 종료 대응)
+  - `_progressOverlay`의 고정 TTL과 달리 마지막 활동 기준
+
+#### 시간대 자동 감지 (버그 수정)
+- [Fixed]: 대시보드 시간 표시가 시스템 시간대를 무시하던 문제
+- [Changed]: 모든 `toLocaleString`/`toLocaleTimeString` 호출에서 locale 하드코딩(`'ko-KR'`) 제거
+  - `toLocaleString()` — 브라우저 시스템 설정 자동 감지 (언어 + 시간대)
+  - 한국이면 KST, 미국이면 EST/PST 등 자동 적용
+- [Changed]: 수정 대상 7곳 — 상단 타임스탬프, formatLocalTime, SSE progress push (batch/individual), Results 목록/상세, 메시지 로그
+
+#### settings.local.json HTTP Hook 설정
+- [Added]: `hooks` 키에 6개 이벤트 타입 설정
+  - PostToolUse (matcher: `Bash|Write|Edit|Read|Grep|Glob|Agent|NotebookEdit`)
+  - SubagentStart, SubagentStop, TeammateIdle, TaskCompleted, Stop
+  - 모두 `http://localhost:3747/hooks/event`로 전송, timeout 3초
+
+#### progress_update_rule 간소화
+- [Changed]: 2-step (Write 임시파일 + curl -d @file) → 단일 인라인 curl
+- [Changed]: 보고 빈도 "즉시" → "3회면 충분 (시작 10% / 중간 50% / 완료 100%)"
+- [Changed]: HTTP Hooks가 heartbeat를 자동 제공하므로 curl은 의미적 마일스톤만 담당
+
+### 설계 결정
+- 단일 `/hooks/event` 엔드포인트로 통합 (이벤트별 분리 X → 설정 간단)
+- 기존 `/api/progress`는 유지 (semantic progress용, 병행)
+- PostToolUse matcher: 주요 도구만 (MCP 도구 제외 → 노이즈 감소)
+- timeout 3초 (localhost라 충분, 실패 시 non-blocking)
+
+### 검증 결과 (Agent Teams 통합 테스트)
+- 팀 구성: Lead(Opus) + 3 Workers(Sonnet×2, Haiku×1) + DA(Opus)
+- endpoint-tester: 7/7 PASS (6 이벤트 + unknown)
+- sse-verifier: 3/3 PASS (hook_activity, hook_lifecycle, hook_event)
+- progress-tester: 9/9 PASS (curl pattern, overlay, session/clear)
+- DA 판정: ACCEPTABLE (보완 2건 권장 → TTL 적용 완료)
+
+### 영향 범위
+- 영향받는 기능: Mission Control (Live Agents 시간 표시), Progress API, SSE 브로드캐스트
+- 기존 기능 변경 없음 — `/api/progress`, SSE 이벤트 구조 유지
+- Agent Office 미실행 시 hook 전송 실패 → 3초 timeout 후 무시 (Claude Code에 영향 없음)
+
+---
+
 ## [2026-02-22] - v3.6 (Tofu Theme Complete + 3-State Status + Agent Flow LTR)
 
 ### 수정 파일

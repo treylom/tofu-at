@@ -347,6 +347,19 @@ function clearArtifacts() {
       cleared.push(f);
     }
   }
+
+  // Clear stale spawn-prompts from previous sessions (preserve CHANGELOG.md)
+  const spawnPromptsDir = path.join(TEAM_OS_DIR, 'spawn-prompts');
+  try {
+    if (fs.existsSync(spawnPromptsDir)) {
+      const spawnFiles = fs.readdirSync(spawnPromptsDir).filter(f => f.endsWith('.md') && f !== 'CHANGELOG.md');
+      for (const f of spawnFiles) {
+        fs.unlinkSync(path.join(spawnPromptsDir, f));
+        cleared.push(`spawn-prompts/${f}`);
+      }
+    }
+  } catch { /* ignore if dir missing */ }
+
   return cleared;
 }
 

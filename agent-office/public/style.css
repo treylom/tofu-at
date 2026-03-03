@@ -36,9 +36,9 @@
   --bg-card-hover: #f0ebe0;
   --border: #e5ddd0;
   --border-active: #d4c8b8;
-  --text-muted: #8a7b6e;
-  --text-secondary: #6b5e50;
-  --text-primary: #2c1f14;
+  --text-muted: #3d3028;
+  --text-secondary: #2c1f14;
+  --text-primary: #1a1005;
   --accent: #8b6f47;
   --accent-dim: rgba(139, 111, 71, 0.12);
   --accent-glow: rgba(139, 111, 71, 0.06);
@@ -75,6 +75,17 @@
 /* Tofu mascot: hidden by default, shown only in tofu theme */
 .tofu-mascot { display: none; }
 .theme-tofu .tofu-mascot { display: inline-block; vertical-align: middle; margin-right: 8px; }
+/* Tofu theme — hardcoded dark-theme text color overrides */
+.theme-tofu .bulletin-time { color: var(--text-muted); }
+.theme-tofu .msg-arrow { color: var(--text-muted); }
+.theme-tofu .bulletin-content { color: var(--text-secondary); }
+.theme-tofu .mc-plan-team-header { color: var(--text-muted); }
+.theme-tofu .mc-plan-steps-label { color: var(--text-muted); }
+.theme-tofu .plan-step-arrow { color: var(--text-muted); }
+.theme-tofu .mode-btn:hover:not(.active) { color: var(--text-primary); }
+.theme-tofu .pixel-btn:hover { color: var(--text-primary); }
+.theme-tofu .modal-close:hover { color: var(--text-primary); }
+.theme-tofu .artifact-textarea { color: var(--text-primary); }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
@@ -1052,8 +1063,8 @@ body::before {
 .mc-plan-team-cell.role { color: #a0aec0; }
 .mc-plan-team-cell.model { color: #718096; font-size: 11px; }
 .theme-tofu .mc-plan-team-cell.name { color: #1a1005; }
-.theme-tofu .mc-plan-team-cell.role { color: #5c4a1e; }
-.theme-tofu .mc-plan-team-cell.model { color: #7a6840; }
+.theme-tofu .mc-plan-team-cell.role { color: #2c1f14; }
+.theme-tofu .mc-plan-team-cell.model { color: #3d3028; }
 .mc-plan-team-cell.status { text-align: center; }
 
 .mc-plan-steps {

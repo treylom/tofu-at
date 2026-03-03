@@ -92,6 +92,7 @@ description: Agent Teams 역할별 스폰 프롬프트 템플릿 + 도구 할당
       - team_bulletin.md: 발견사항 게시판 (append-only) → 팀원 누구나 추가 가능
       - team_findings.md: 결과 요약 → 리드가 팀원 결과를 통합 기록
       - team_progress.md: 상태 추적 → 팀원이 자기 진행상황 업데이트
+      - team_dead_ends.md: 실패한 접근법 기록 → 팀원 누구나 추가 가능 (DEAD_ENDS 프로토콜)
 
     Layer 2 (팀 5명+): SQLite WAL
       경로: {{SQLITE_PATH}}
@@ -101,9 +102,11 @@ description: Agent Teams 역할별 스폰 프롬프트 템플릿 + 도구 할당
       서버: {{MCP_MEMORY_SERVER}}
 
     리드 메모리 프로토콜:
-      팀 생성 직후: team_plan.md 작성 (목적, 역할 할당, 태스크 목록)
+      팀 생성 직후: team_plan.md 작성 (목적, 역할 할당, 태스크 목록) + team_dead_ends.md 초기화
       팀원 결과 수신 시: team_findings.md에 결과 통합 기록
       팀원 발견 확인 시: team_bulletin.md 읽기 → 계획 조정 필요 여부 판단
+      실패 접근법 발견 시: team_dead_ends.md에 기록 (DEAD_ENDS 프로토콜)
+      REPLACE 전략 실행 시: 기존 워커 접근법을 team_dead_ends.md에 기록 후 교체
       팀 종료 직전: team_progress.md에 최종 상태 기록
   </shared_memory>
 
@@ -200,6 +203,47 @@ description: Agent Teams 역할별 스폰 프롬프트 템플릿 + 도구 할당
   {{CLAUDE_BEHAVIOR_BLOCK}}
 </lead_behavior>
 ```
+
+---
+
+## 2.5. 모델 배정 검증 (스폰 직전 — MANDATORY)
+
+**모든 워커 스폰 전에 반드시 실행합니다. Opus 워커 배정을 자동 차단합니다.**
+
+### 검증 로직
+
+```
+스폰 큐의 각 역할에 대해:
+
+FOR each role IN spawn_queue:
+  IF role.type == "worker" AND role.model == "opus":
+    → user_explicitly_approved_opus_workers?
+      (STEP 2-A 응답에서 "workers = opus" 명시적 선택 기록 확인)
+      → NO: role.model = "sonnet" (강제 다운그레이드)
+             로그: "⚠️ {role.name}: opus → sonnet 다운그레이드 (사용자 미승인)"
+      → YES: 진행 (STEP 2 응답 기록에 근거 명시)
+
+사용자가 STEP 2에서 "workers = Sonnet" 지정 시:
+  → 모든 worker.model을 sonnet으로 강제 (예외 불가)
+```
+
+### 비용 추정 표시 (스폰 전)
+
+```
+스폰 직전에 다음 테이블을 출력합니다:
+
+| 역할 | 이름 | 모델 | 예상 토큰 (입력+출력) | 비고 |
+|------|------|------|---------------------|------|
+{각 역할별 정보}
+
+총 예상 비용: ${estimated_total}
+```
+
+### 금지 패턴
+
+- Lead/Category Lead가 아닌 worker에 opus 배정 시 사용자 미승인이면 자동 차단
+- "작업이 복잡해서 opus가 필요" 등의 자의적 판단으로 업그레이드 금지
+- STEP 2 응답에 명시적 기록 없으면 기본값(sonnet) 적용
 
 ---
 
@@ -386,6 +430,7 @@ description: Agent Teams 역할별 스폰 프롬프트 템플릿 + 도구 할당
   작업 시작 전:
     1. Read team_plan.md → 내 할당 확인
     2. Read team_bulletin.md → 최근 발견사항 확인
+    2.5. Read team_dead_ends.md → 실패한 접근법 확인 (같은 실수 방지!)
     3. TaskCreate로 자기 할 일 목록 등록 (to-do list):
        - 할당된 작업을 3-5개 세부 항목으로 분해
        - 각 항목을 TaskCreate로 등록 → 대시보드에 자동 반영
@@ -1685,3 +1730,94 @@ Task(
 3. 모든 팀원 셧다운 확인 후:
    TeamDelete()
 ```
+
+---
+
+## 9. codex-exec-worker Spawn Template (Bridge Mode)
+
+### 9.1 Template Definition
+
+| Field | Value |
+|-------|-------|
+| subagent_type | general-purpose |
+| model | sonnet (Claude bridge — internally runs Codex) |
+| execution_mode | codex-bridge |
+| required_tools | Bash, Read, Write, Glob, Grep, SendMessage, TaskUpdate |
+| reference_skill | codex-exec-bridge.md |
+| reference_agent | codex-exec-worker.md |
+
+### 9.2 Spawn Prompt Template
+
+```
+You are {{ROLE_NAME}} on team {{TEAM_NAME}}.
+
+## Role
+You are a Bridge Worker. You receive coding tasks from the Lead via SendMessage,
+execute them via `codex exec` CLI, run Dynamic Gate verification, and report results.
+
+## Team Context
+- Team: {{TEAM_NAME}}
+- Topic: {{TOPIC}}
+- Your role: {{ROLE_NAME}}
+- Lead: {{LEAD_NAME}}
+
+## Task
+{{TASK_DESCRIPTION}}
+
+## Execution Instructions
+1. Read `.claude/agents/codex-exec-worker.md` for full behavior spec
+2. Read `.claude/skills/codex-exec-bridge.md` for bridge setup and codex exec patterns
+3. Follow codex-exec-worker protocol exactly:
+   - Acknowledge task receipt via SendMessage
+   - Execute via `codex exec --quiet "{{TASK_DESCRIPTION}}"` in {{WORKING_DIR}}
+   - Run Dynamic Gate (tsc / build / test / lint as applicable)
+   - Write status to `.team-os/codex-status/{{TASK_ID}}.json`
+   - Report result to Lead via SendMessage
+
+## Bridge Mode Notes
+- You run as Claude (sonnet, Anthropic Direct) — NOT via CLIProxyAPI proxy
+- `codex exec` CLI handles Codex model access independently
+- ANTHROPIC_BASE_URL is NOT set for you (Anthropic Direct routing)
+- The `codex` binary handles its own OAuth credentials
+
+## Progress Reporting
+{{PROGRESS_UPDATE_RULE}}
+
+## Team Members
+{{TEAM_MEMBERS}}
+```
+
+### 9.3 Spawn Call Pattern
+
+```
+Agent(
+  name: "{{ROLE_NAME}}",
+  subagent_type: "general-purpose",
+  model: "sonnet",
+  team_name: "{{TEAM_NAME}}",
+  run_in_background: true,
+  prompt: "{{스폰 프롬프트 (변수 치환 완료)}}"
+)
+```
+
+> **주의**: Bridge Mode 워커는 tmux env `ANTHROPIC_BASE_URL` 없이 스폰됩니다.
+> CLIProxyAPI 경유 없이 Anthropic Direct로 Claude가 실행되며,
+> 내부적으로 `codex exec` CLI를 통해 Codex 모델을 호출합니다.
+
+### 9.4 When to Use
+
+| Condition | Mode |
+|-----------|------|
+| Coding/file modification task | codex-bridge (this template) |
+| Analysis/research task | proxy (standard CLIProxyAPI) |
+| Mixed workflow | hybrid (per-role selection) |
+
+### 9.5 Bridge vs Proxy Comparison
+
+| 항목 | Proxy Mode | Bridge Mode |
+|------|-----------|-------------|
+| Claude spawn model | sonnet (proxied → Codex) | sonnet (Anthropic Direct) |
+| ANTHROPIC_BASE_URL | http://127.0.0.1:8317 | (unset — Direct) |
+| Codex 접근 방식 | CLIProxyAPI alias 라우팅 | codex exec CLI subprocess |
+| 최적 용도 | 분석/리서치 (자연어 응답) | 코딩/파일 수정 (CLI 실행) |
+| 상태 추적 | SendMessage 기반 | .team-os/codex-status/ 파일 |
