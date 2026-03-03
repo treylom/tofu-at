@@ -339,12 +339,19 @@ completed_hook = {
     }]
 }
 
+# Agent Office dashboard hooks (silently fails if server not running)
+ao_forward = "node agent-office/hooks/forward-event.js"
+ao_hook = {"hooks": [{"type": "command", "command": ao_forward, "timeout": 3}]}
+
+# Event types that Agent Office monitors
+ao_events = ["PostToolUse", "SubagentStart", "SubagentStop", "TeammateIdle", "TaskCompleted", "Stop"]
+
 # Only add hooks if not already present (avoid duplicates)
 def has_hook(hook_list, cmd_substring):
     for matcher in hook_list:
         hooks = matcher.get("hooks", [])
         for h in hooks:
-            if cmd_substring in h.get("command", ""):
+            if cmd_substring in h.get("command", "") or cmd_substring in h.get("url", ""):
                 return True
     return False
 
@@ -357,6 +364,20 @@ if "TaskCompleted" not in settings["hooks"]:
     settings["hooks"]["TaskCompleted"] = [completed_hook]
 elif not has_hook(settings["hooks"]["TaskCompleted"], "task-completed-gate"):
     settings["hooks"]["TaskCompleted"].append(completed_hook)
+
+# Add Agent Office forwarding hooks (skip if already present)
+for ev in ao_events:
+    if ev not in settings["hooks"]:
+        settings["hooks"][ev] = [ao_hook]
+    elif not has_hook(settings["hooks"][ev], "forward-event"):
+        settings["hooks"][ev].append(ao_hook)
+
+# Remove legacy HTTP hooks pointing to localhost:3747 (replaced by forward-event.js)
+for ev in settings["hooks"]:
+    for matcher in settings["hooks"][ev]:
+        hooks = matcher.get("hooks", [])
+        matcher["hooks"] = [h for h in hooks if not (h.get("type") == "http" and "3747" in h.get("url", ""))]
+    settings["hooks"][ev] = [m for m in settings["hooks"][ev] if m.get("hooks")]
 
 # Fix hooks format: wrap bare handlers in {hooks: [...]}
 for ev in settings["hooks"]:
@@ -409,8 +430,12 @@ settings.hooks = settings.hooks || {};
 const idleHook = { hooks: [{ type: "command", command: "node .team-os/hooks/teammate-idle-gate.js" }] };
 const completedHook = { hooks: [{ type: "command", command: "node .team-os/hooks/task-completed-gate.js" }] };
 
+const aoForward = "node agent-office/hooks/forward-event.js";
+const aoHook = { hooks: [{ type: "command", command: aoForward, timeout: 3 }] };
+const aoEvents = ["PostToolUse", "SubagentStart", "SubagentStop", "TeammateIdle", "TaskCompleted", "Stop"];
+
 function hasHook(list, sub) {
-  return list.some(m => (m.hooks || []).some(h => (h.command || "").includes(sub)));
+  return list.some(m => (m.hooks || []).some(h => (h.command || "").includes(sub) || (h.url || "").includes(sub)));
 }
 
 if (!settings.hooks.TeammateIdle) settings.hooks.TeammateIdle = [idleHook];
@@ -418,6 +443,20 @@ else if (!hasHook(settings.hooks.TeammateIdle, "teammate-idle-gate")) settings.h
 
 if (!settings.hooks.TaskCompleted) settings.hooks.TaskCompleted = [completedHook];
 else if (!hasHook(settings.hooks.TaskCompleted, "task-completed-gate")) settings.hooks.TaskCompleted.push(completedHook);
+
+// Add Agent Office forwarding hooks
+for (const ev of aoEvents) {
+  if (!settings.hooks[ev]) settings.hooks[ev] = [aoHook];
+  else if (!hasHook(settings.hooks[ev], "forward-event")) settings.hooks[ev].push(aoHook);
+}
+
+// Remove legacy HTTP hooks pointing to localhost:3747
+for (const ev of Object.keys(settings.hooks)) {
+  for (const m of settings.hooks[ev]) {
+    m.hooks = (m.hooks || []).filter(h => !(h.type === "http" && (h.url || "").includes("3747")));
+  }
+  settings.hooks[ev] = settings.hooks[ev].filter(m => m.hooks && m.hooks.length > 0);
+}
 
 // Fix hooks format
 for (const ev of Object.keys(settings.hooks)) {
