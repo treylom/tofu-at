@@ -341,6 +341,7 @@ FOR each role IN spawn_queue:
   - 팀 생성 금지 (TeamCreate 사용 불가 - 중첩 팀 방지)
   - 추가 워커 필요 시 리드에게 SendMessage로 요청만 가능
   - MCP 도구는 정규화된 이름 사용: mcp__{서버명}__{도구명}
+  - 플랜/태스크에 스킬 사용 지시 시 Skill 도구 직접 호출 필수 (Read+내재화 금지)
   - idle 시 반드시 요약+증거+다음행동 메시지를 리드에게 전송
 </constraints>
 
@@ -462,6 +463,8 @@ FOR each role IN spawn_queue:
   - 할당된 도구만 사용
   - MCP 도구는 정규화된 이름 사용: mcp__{서버명}__{도구명}
   - CLI 도구가 MCP보다 토큰 효율적이면 CLI 우선 사용
+  - 플랜/태스크에 스킬 사용 지시("/스킬명", "Skill()", "스킬로") 시 Skill 도구 직접 호출 필수
+    (스킬 파일을 Read하고 방법론만 따르는 "내재화" 금지 — Skill("스킬명") 호출이 정답)
   - 공유 메모리 파일 읽기 후 작업 시작 (team_plan.md, team_bulletin.md 필수)
   - team_bulletin.md는 append-only (기존 내용 수정 금지)
   - 작업 완료 후 반드시 SendMessage로 결과 보고
@@ -554,6 +557,7 @@ FOR each role IN spawn_queue:
   | 파일 쓰기는 리드 지시 시에만 | Bug-2025-12-12-2056 대응 |
   | 완료 시 SendMessage 필수 | 팀 조율 (idle 방지) |
   | MCP는 정규화 이름 사용 | mcp__{서버명}__{도구명} |
+  | 플랜에 스킬 사용 지시 시 Skill 도구 직접 호출 필수 (Read+내재화 금지) | 스킬 로직 정확 실행 보장 |
 </team_override>
 ```
 
@@ -722,6 +726,19 @@ ELIF tool_paths[기능].method == "mcp":
 
 주의: CLI 사용 시에도 ToolSearch로 MCP 대안 확인하여 폴백 준비
 ```
+
+### Skill 도구 호출 규칙 (CRITICAL)
+
+플랜/태스크에 특정 스킬 사용 지시가 있으면:
+
+| 패턴 | 워커 행동 |
+|------|----------|
+| "/prompt 스킬로 리서치" | Skill("prompt") 직접 호출 |
+| "km-workflow 스킬 적용" | Skill("km-workflow") 직접 호출 |
+| "Skill('xxx')로 처리" | Skill("xxx") 직접 호출 |
+
+금지: 스킬 파일을 Read()로 읽고 방법론만 따르기 ("내재화")
+이유: Skill 도구는 최신 버전을 로드하고 정확한 워크플로우를 실행. Read+내재화는 불완전한 재현.
 
 ---
 
