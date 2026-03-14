@@ -1260,7 +1260,7 @@ Step 5-0: Existing Agent Detection
 | 5-2 | Expert Priming | role + 매핑 테이블 | expert_name, expert_framework | 섹션 7.5 + expert-domain-priming.md |
 | 5-3 | Task Expansion | role.tasks + purpose | expanded_task_details | /prompt 명시적 요소 확장 |
 | 5-4 | CE Checklist | 전체 프롬프트 | CE 최적화된 프롬프트 | 섹션 7 |
-| 5-5 | Claude Optimization | subagent_type | CLAUDE_BEHAVIOR_BLOCK | claude-4.5-prompt-strategies.md |
+| 5-5 | Claude Optimization | subagent_type | CLAUDE_BEHAVIOR_BLOCK | claude-4.6-prompt-strategies.md |
 | 5-6 | Quick 3-Expert Review | 최종 프롬프트 | 자동 개선 반영 | 내부 자가 점검 |
 
 ### Step 5-1: Purpose Detection
@@ -1340,7 +1340,7 @@ subagent_type에 따라 Claude 전용 행동 블록을 삽입합니다.
 ## 7.7 Claude 4.5 프롬프트 전략 (내장)
 
 > Claude 에이전트 프롬프트 패턴, XML 구조화 전략, 도구 사용 패턴.
-> Source: `claude-4.5-prompt-strategies.md` 전체 내장.
+> Source: `claude-4.6-prompt-strategies.md` 전체 내장.
 
 ### 모델 개요
 
@@ -1691,7 +1691,7 @@ Avoid: Overused fonts (Inter, Roboto), clichéd color schemes, predictable layou
 > |------|------|
 > | `image-prompt-guide.md` | 이미지 생성 프롬프트 (gpt-image, Nano Banana) |
 > | `research-prompt-guide.md` | 팩트체크/리서치 프롬프트 (IFCN 원칙) |
-> | `gpt-5.2-prompt-enhancement.md` | GPT-5.2 전용 XML 패턴 상세 |
+> | `gpt-5.4-prompt-enhancement.md` | GPT-5.2 전용 XML 패턴 상세 |
 > | `slide-prompt-guide.md` | 슬라이드/PPT 프롬프트 가이드 |
 >
 > 위 스킬은 `/prompt` 커맨드에서 사용되며, `/tofu-at`는 §7.5-7.8의 내장 콘텐츠만으로 작동합니다.
