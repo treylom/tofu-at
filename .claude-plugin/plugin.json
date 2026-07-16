@@ -1,0 +1,12 @@
+{
+  "name": "tofu-at",
+  "description": "Convert workflows into Agent Teams (Split Pane/Swarm) for Claude Code",
+  "version": "2.0.0",
+  "author": {
+    "name": "tofukyung",
+    "url": "https://github.com/treylom"
+  },
+  "homepage": "https://github.com/treylom/tofu-at",
+  "repository": "https://github.com/treylom/tofu-at",
+  "license": "MIT"
+}

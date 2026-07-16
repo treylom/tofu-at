@@ -10,7 +10,13 @@
       "description": "Workflow to Agent Teams converter",
       "source": "./",
       "strict": false,
-      "skills": ["./skills"]
+      "skills": [
+        "./skills"
+      ]
     }
-  ]
+  ],
+  "owner": {
+    "name": "tofukyung",
+    "url": "https://github.com/treylom"
+  }
 }
