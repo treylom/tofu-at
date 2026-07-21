@@ -17,9 +17,16 @@ function formatModelName(raw) {
   if (!raw) return '';
   const s = raw.toLowerCase().trim();
   const map = {
-    'opus': 'Opus 4.6',
-    'sonnet': 'Sonnet 4.6',
+    'opus': 'Opus 4.8',
+    'sonnet': 'Sonnet 5',
     'haiku': 'Haiku 4.5',
+    'fable': 'Fable 5',
+    'claude-opus-4-8': 'Opus 4.8',
+    'claude-sonnet-5': 'Sonnet 5',
+    'claude-fable-5': 'Fable 5',
+    'opus 4.8': 'Opus 4.8',
+    'sonnet 5': 'Sonnet 5',
+    'fable 5': 'Fable 5',
     'claude-opus-4-6': 'Opus 4.6',
     'claude-sonnet-4-6': 'Sonnet 4.6',
     'claude-sonnet-4-5-20250929': 'Sonnet 4.5',

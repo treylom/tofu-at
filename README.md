@@ -629,11 +629,11 @@ OpenAI Codex를 **선택적으로** 통합하는 하이브리드 모드. Codex C
 ### How It Works (v2)
 
 ```
-Leader (Opus 4.6)  ──── Anthropic Direct API
+Leader (Opus 4.8)  ──── Anthropic Direct API
                          |
 Workers (Sonnet)   ──── Anthropic Direct API
                          |
-DA (codex exec)    ──── Codex CLI → GPT-5.4  (adversarial review, optional)
+DA (codex exec)    ──── Codex CLI → GPT-5.6  (adversarial review, optional)
 ```
 
 Workers는 항상 Anthropic Direct. Codex는 DA(adversarial review) 역할에만 선택적으로 사용됩니다. DA는 팀원이 아니라 Lead가 `codex exec`를 직접 호출하는 방식입니다.

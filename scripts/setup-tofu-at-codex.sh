@@ -17,7 +17,7 @@
 #
 # Swarm mode (ENABLE_SWARM=1): Standard + CLIProxyAPI + OAuth 필수
 #   - 비코딩 워커 5명 이상일 때 /tofu-at-codex가 자동 활성화
-#   - Workers를 tmux split pane에 띄우고 GPT-5.4로 라우팅 (토큰 절약)
+#   - Workers를 tmux split pane에 띄우고 GPT-5.6으로 라우팅 (토큰 절약)
 #   - DA도 진짜 teammate로 복구 (SendMessage 장기 대화)
 #   - CLIProxyAPI 바이너리 + OAuth 토큰이 없으면 이 모드는 사용 불가
 #
@@ -152,13 +152,13 @@ check_cliproxyapi() {
       cat <<'YAML'
     oauth-model-alias:
       codex:
-        - name: "gpt-5.4"
+        - name: "gpt-5.6"
           alias: "claude-sonnet-4-6"
-        - name: "gpt-5.4"
+        - name: "gpt-5.6"
           alias: "claude-opus-4-6"
-        - name: "gpt-5.4"
+        - name: "gpt-5.6"
           alias: "claude-sonnet-4-5-20250929"
-        - name: "gpt-5.4"
+        - name: "gpt-5.6"
           alias: "claude-haiku-4-5-20251001"
 YAML
     fi
@@ -177,13 +177,13 @@ routing:
   strategy: "round-robin"
 oauth-model-alias:
   codex:
-    - name: "gpt-5.4"
+    - name: "gpt-5.6"
       alias: "claude-sonnet-4-6"
-    - name: "gpt-5.4"
+    - name: "gpt-5.6"
       alias: "claude-opus-4-6"
-    - name: "gpt-5.4"
+    - name: "gpt-5.6"
       alias: "claude-sonnet-4-5-20250929"
-    - name: "gpt-5.4"
+    - name: "gpt-5.6"
       alias: "claude-haiku-4-5-20251001"
 YAML
       ok "config.yaml 자동 생성 완료"
@@ -203,13 +203,13 @@ routing:
   strategy: "round-robin"
 oauth-model-alias:
   codex:
-    - name: "gpt-5.4"
+    - name: "gpt-5.6"
       alias: "claude-sonnet-4-6"
-    - name: "gpt-5.4"
+    - name: "gpt-5.6"
       alias: "claude-opus-4-6"
-    - name: "gpt-5.4"
+    - name: "gpt-5.6"
       alias: "claude-sonnet-4-5-20250929"
-    - name: "gpt-5.4"
+    - name: "gpt-5.6"
       alias: "claude-haiku-4-5-20251001"
 YAML
       ok "config.yaml 자동 생성 완료"

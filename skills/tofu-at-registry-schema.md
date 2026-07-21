@@ -20,7 +20,7 @@ defaults:
   routing_policy:
     opus:
       use_for: ["architecture", "integration", "high-risk refactor", "consensus"]
-    sonnet:  # Sonnet 4.6 (v2.1.45+), 기본 sonnet[1m] (1M 컨텍스트)
+    sonnet:  # Sonnet 5 (현행), 기본 sonnet[1m] (1M 컨텍스트)
       use_for: ["implementation planning", "refactor steps", "tests", "scripts", "category coordination"]
     haiku:
       use_for: ["labeling", "classification", "triage", "small transforms"]
