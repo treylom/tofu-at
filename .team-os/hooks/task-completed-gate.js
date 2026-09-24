@@ -12,10 +12,12 @@
  *
  *   1. Required files named in task_description. A line such as
  *        required_files: docs/a.md, src/b.js
- *      (optionally prefixed with "- " or "* ", case-insensitive key, and
- *      each path optionally wrapped in backticks) lists paths that must
- *      exist under the project (process.cwd()) before the task can be
- *      marked done. No such line anywhere in task_description means this
+ *      (optionally prefixed with "- " or "* ", case-insensitive key written
+ *      with an underscore so ordinary prose like "Required files: see below"
+ *      is not a marker, and each path optionally wrapped in backticks) lists
+ *      paths that must exist before the task can be marked done. Relative
+ *      paths are resolved under the project (process.cwd()); absolute paths
+ *      are checked as written. No such line anywhere in task_description means this
  *      check does nothing.
  *
  *   2. Same-file conflicts on the Status Board. If TEAM_PROGRESS.md has a
@@ -69,7 +71,7 @@ function parseFileList(raw) {
 
 function findRequiredFiles(taskDescription) {
   const files = [];
-  const re = /^\s*(?:[-*]\s+)?required[_ ]files\s*:\s*(.+)$/i;
+  const re = /^\s*(?:[-*]\s+)?required_files\s*:\s*(.+)$/i;
   for (const line of taskDescription.split("\n")) {
     const m = line.match(re);
     if (m) {
@@ -158,7 +160,7 @@ process.stdin.on("end", () => {
     if (typeof taskDescription === "string") {
       const requiredFiles = findRequiredFiles(taskDescription);
       const missing = requiredFiles.filter(
-        (f) => !fs.existsSync(path.join(process.cwd(), f))
+        (f) => !fs.existsSync(path.resolve(process.cwd(), f))
       );
       if (missing.length > 0) {
         console.error(

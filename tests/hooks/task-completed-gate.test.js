@@ -208,10 +208,40 @@ test('the marker also works as a Markdown bullet with backticks', (t) => {
   // Break caught: a marker written in a common Markdown style being ignored.
   const dir = project(t, BOARD_40);
   touch(dir, 'out/a.md');
-  const r = runGate(dir, realInput(dir, { task_description: '- Required files: `out/a.md`, `out/b.md`' }));
+  const r = runGate(dir, realInput(dir, { task_description: '- required_files: `out/a.md`, `out/b.md`' }));
   assert.equal(r.status, 2);
   assert.match(r.stderr, /out\/b\.md/);
   assert.doesNotMatch(r.stderr, /out\/a\.md/);
+});
+
+test('plain prose such as "Required files: see below" is not a marker', (t) => {
+  // Break caught: a loose key pattern (space or underscore) turning ordinary
+  // task text into a required-file list and blocking the completion.
+  const dir = project(t, BOARD_40);
+  const r = runGate(dir, realInput(dir, {
+    task_description: 'Required files: see below\nAdd login and signup endpoints',
+  }));
+  assert.equal(r.status, 0, r.stderr);
+  assert.match(row(readBoard(dir), '| implementer |'), DONE_ROW);
+});
+
+test('an absolute required path is checked as written, not under the project', (t) => {
+  // Break caught: joining an absolute path under process.cwd(), which reports
+  // an existing file as missing.
+  const dir = project(t, BOARD_40);
+  touch(dir, 'abs/present.md');
+  const abs = path.join(dir, 'abs', 'present.md');
+  const r = runGate(dir, realInput(dir, { task_description: `required_files: ${abs}` }));
+  assert.equal(r.status, 0, r.stderr);
+});
+
+test('a missing absolute required path blocks and is named as written', (t) => {
+  // Break caught: allowing a missing absolute path, or naming a rewritten path.
+  const dir = project(t, BOARD_40);
+  const abs = path.join(dir, 'abs', 'absent.md');
+  const r = runGate(dir, realInput(dir, { task_description: `required_files: ${abs}` }));
+  assert.equal(r.status, 2);
+  assert.ok(r.stderr.includes(abs), r.stderr);
 });
 
 test('required files are checked even without teammate_name', (t) => {
